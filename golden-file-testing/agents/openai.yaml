@@ -1,0 +1,4 @@
+interface:
+  display_name: "Golden File Testing"
+  short_description: "Test stable structured and rendered outputs"
+  default_prompt: "Use $golden-file-testing to design or review these snapshot tests."

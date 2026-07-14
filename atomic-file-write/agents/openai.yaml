@@ -1,0 +1,4 @@
+interface:
+  display_name: "Atomic File Write"
+  short_description: "Prevent partial and corrupt file updates"
+  default_prompt: "Use $atomic-file-write to implement or review this file update."

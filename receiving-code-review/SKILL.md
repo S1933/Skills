@@ -1,6 +1,6 @@
 ---
 name: receiving-code-review
-description: Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable - requires technical rigor and verification, not performative agreement or blind implementation
+description: Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable - requires technical rigor and verification, not performative agreement or blind implementation. Governs how you respond to feedback you got — unlike /requesting-code-review (dispatches a reviewer subagent) and /review-scope (only gathers the diff to review).
 ---
 
 # Code Review Reception

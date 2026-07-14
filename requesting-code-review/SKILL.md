@@ -1,6 +1,6 @@
 ---
 name: requesting-code-review
-description: Use when completing tasks, implementing major features, or before merging to verify work meets requirements
+description: Use when completing tasks, implementing major features, or before merging to verify work meets requirements. Dispatches a reviewer subagent with crafted context — unlike /review-scope (only gathers the diff to review) and /receiving-code-review (how to respond to feedback you got).
 ---
 
 # Requesting Code Review
