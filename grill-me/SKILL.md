@@ -4,4 +4,4 @@ description: Use when explicitly invoking /grill-me to stress-test and sharpen a
 disable-model-invocation: true
 ---
 
-Run a `/grilling` session.
+Run a `grilling` skill session.

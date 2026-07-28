@@ -39,7 +39,7 @@ There are three types of tickets:
 
 - **Research**: Reading documentation, third-party API's, or local resources like knowledge bases. Creates a markdown summary as an asset. Use this when knowledge outside the current working directory is required.
 - **Prototype**: Writing UI or logic code to test a hypothesis, or to explore a design space. Uses the /prototype skill. Creates a prototype as an asset. Use this when "how should it look" or "how should it behave" is the key question.
-- **Discuss**: Conversation with the agent. Uses the /grilling and /domain-modelling skills. The default case.
+- **Discuss**: Conversation with the agent. Uses the `grilling` and `domain-modeling` skills. The default case.
 
 ## Fog of war
 
@@ -55,7 +55,7 @@ There are two ways this skill can be invoked: **bootstrap** and **resume**.
 
 User invokes with a loose idea.
 
-1. Run a /grilling and /domain-modelling session to surface the open decisions.
+1. Run a `grilling` and `domain-modeling` session to surface the open decisions.
 2. Write a new decision map — mostly fog, frontier identified, trivially-decidable entries resolved inline.
 3. Stop. Map-building is one session's work; do not also resolve tickets.
 
@@ -64,7 +64,7 @@ User invokes with a loose idea.
 User invokes with a path to an existing map and a ticket number.
 
 1. Load the **whole map** as context.
-2. Run a session to resolve the ticket, invoking skills as needed. If in doubt, use `/grilling` and `/domain-modelling`.
+2. Run a session to resolve the ticket, invoking skills as needed. If in doubt, use `grilling` and `domain-modeling`.
 3. Record what the session resolved in the ticket's body.
 4. Add newly-discovered tickets (with correct `blocked_by` edges).
 5. Stop.
@@ -81,4 +81,4 @@ Many times, the initial grilling will result in no fog of war. No unresolved tic
 
 In those situations, you should offer the user the chance to skip the decision map - since the decision map is only needed if multi-session decisions need to be made.
 
-If they skip it, you should recommend either implementing directly or using `/to-prd` to schedule a multi-session implementation.
+If they skip it, recommend either implementing directly or using the `to-prd` skill to schedule a multi-session implementation.

@@ -28,7 +28,7 @@ Claude Code ships several skills that touch this space. None of them do what a d
 
 | Built-in | What it does | Why it's not a debt audit |
 |----------|--------------|----------------------------|
-| `/review` | PR-style code review of changes | Diff-scoped. Useful before merging a branch, not useful when you've inherited 80k LOC and want to know what's rotten. |
+| `requesting-code-review` | PR-style code review of changes | Diff-scoped. Useful before merging a branch, not useful when you've inherited 80k LOC and want to know what's rotten. |
 | `/simplify` | Reduces over-engineered code in a specific area | Tactical, not architectural. Doesn't survey, doesn't cite, doesn't produce an artifact. |
 | `/debug` | Targets a specific failure or unexpected behavior | Reactive. You point it at a known problem; an audit's job is to *find* the problems. |
 | `/loop`, `/batch` | Workflow primitives for repeated or grouped tasks | Orchestration, not analysis. |
@@ -166,4 +166,3 @@ MIT. Use it, fork it, ship it. Attribution appreciated but not required.
 Built on the [Claude Code Agent Skills](https://code.claude.com/docs/en/skills) standard.
 
 Inspired by the experience of working with Claude Code on codebases that got really messy over time.
-

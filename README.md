@@ -23,7 +23,7 @@ A personal collection of [Agent Skills](https://agentskills.io/specification) fo
 
 | Skill | When to use |
 |---|---|
-| [implement](implement/) **(manual)** | Implement work from a PRD/issues, chaining `/tdd` and `/review`. |
+| [implement](implement/) **(manual)** | Implement work from a PRD/issues using canonical TDD, verification, and code-review skills. |
 | [test-driven-development](test-driven-development/) | Any feature/bugfix — test first, watch it fail, minimal code, refactor. |
 | [subagent-driven-development](subagent-driven-development/) | Execute plans with independent tasks in the current session. |
 | [dispatching-parallel-agents](dispatching-parallel-agents/) | 2+ independent tasks with no shared state or sequencing. |

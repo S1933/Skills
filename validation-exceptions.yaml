@@ -1,3 +1,1 @@
-exceptions:
-  # Phase 4 replaces these legacy command aliases with canonical skill names.
-  - {code: E016_ALIAS_UNKNOWN, path: implement/SKILL.md, reason: Phase 4 alias migration}
+exceptions: []

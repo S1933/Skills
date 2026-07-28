@@ -45,6 +45,8 @@ class ValidatorTests(unittest.TestCase):
         requires_skills: list[str] | None = None,
         visibility: str = "public",
         clients: list[str] | None = None,
+        invocation: str = "automatic",
+        dependency_notes: dict[str, str] | None = None,
     ) -> dict[str, object]:
         skill_path = path or fixture
         destination = self.root / skill_path
@@ -54,7 +56,7 @@ class ValidatorTests(unittest.TestCase):
             "name": name or skill_path,
             "path": skill_path,
             "description": description or "Use when exercising a validator fixture.",
-            "invocation": "automatic",
+            "invocation": invocation,
             "visibility": visibility,
             "clients": clients or ["agent-skills"],
             "requires_skills": requires_skills or [],
@@ -63,6 +65,7 @@ class ValidatorTests(unittest.TestCase):
             "requires_tools": [],
             "requires_commands": [],
             "aliases": [],
+            "dependency_notes": dependency_notes or {},
         }
 
     def validate(self, entries: list[dict[str, object]]):
@@ -115,6 +118,74 @@ class ValidatorTests(unittest.TestCase):
     def test_missing_dependency_has_stable_identifier(self) -> None:
         entry = self.add_skill("valid-skill", requires_skills=["absent-skill"])
         self.assertIn("E015_SKILL_DEPENDENCY_MISSING", self.codes([entry]))
+
+    def test_automatic_skill_must_explain_required_manual_dependency(self) -> None:
+        automatic = self.add_skill(
+            "valid-skill",
+            requires_skills=["manual-dependency"],
+        )
+        manual = self.add_skill(
+            "valid-skill",
+            path="manual-dependency",
+            name="manual-dependency",
+            invocation="manual",
+        )
+        skill = self.root / "manual-dependency" / "SKILL.md"
+        skill.write_text(
+            skill.read_text(encoding="utf-8").replace(
+                "name: valid-skill",
+                "name: manual-dependency\ndisable-model-invocation: true",
+            ),
+            encoding="utf-8",
+        )
+        self.assertIn("E028_MANUAL_DEPENDENCY", self.codes([automatic, manual]))
+
+    def test_documented_manual_dependency_is_allowed(self) -> None:
+        automatic = self.add_skill(
+            "valid-skill",
+            requires_skills=["manual-dependency"],
+            dependency_notes={
+                "manual-dependency": "The user explicitly selects this hand-off workflow."
+            },
+        )
+        manual = self.add_skill(
+            "valid-skill",
+            path="manual-dependency",
+            name="manual-dependency",
+            invocation="manual",
+        )
+        skill = self.root / "manual-dependency" / "SKILL.md"
+        skill.write_text(
+            skill.read_text(encoding="utf-8").replace(
+                "name: valid-skill",
+                "name: manual-dependency\ndisable-model-invocation: true",
+            ),
+            encoding="utf-8",
+        )
+        self.assertNotIn("E028_MANUAL_DEPENDENCY", self.codes([automatic, manual]))
+
+    def test_required_dependency_must_support_a_compatible_client(self) -> None:
+        portable = self.add_skill(
+            "valid-skill",
+            requires_skills=["client-specific"],
+        )
+        client_specific = self.add_skill(
+            "valid-skill",
+            path="client-specific",
+            name="client-specific",
+            clients=["codex"],
+        )
+        skill = self.root / "client-specific" / "SKILL.md"
+        skill.write_text(
+            skill.read_text(encoding="utf-8")
+            .replace("name: valid-skill", "name: client-specific")
+            .replace(
+                "description:",
+                "compatibility: Requires Codex.\ndescription:",
+            ),
+            encoding="utf-8",
+        )
+        self.assertIn("E029_INCOMPATIBLE_DEPENDENCY", self.codes([portable, client_specific]))
 
     def test_excessively_long_description_has_stable_identifier(self) -> None:
         entry = self.add_skill("valid-skill")

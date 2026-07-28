@@ -41,7 +41,7 @@ standalone examples.
 
 ## Discovery and dependency findings
 
-- `implement` refers to undeclared `/tdd` and `/review` aliases.
+- At baseline, `implement` referred to undeclared `tdd` and `review` command aliases; Phase 4 replaced them with canonical skill names.
 - Review skill descriptions contain slash-command comparisons instead of only
   observable trigger conditions.
 - Several automatic descriptions do not start with `Use when`.
