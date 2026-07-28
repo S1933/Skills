@@ -1,0 +1,71 @@
+skill: git-guardrails-claude-code
+description: Use when setting up Claude Code hooks to prevent pushes or destructive
+  Git operations from running without user control.
+cases:
+- name: positive 1
+  prompt: Add Claude Code hooks that block force pushes and destructive Git commands.
+  tags:
+  - positive
+  expected:
+    should_trigger: true
+- name: positive 2
+  prompt: 'Please help: Add Claude Code hooks that block force pushes and destructive
+    Git commands.'
+  tags:
+  - positive
+  expected:
+    should_trigger: true
+- name: positive 3
+  prompt: In this repository, Add Claude Code hooks that block force pushes and destructive
+    Git commands.
+  tags:
+  - positive
+  expected:
+    should_trigger: true
+- name: positive 4
+  prompt: Before changing anything, Add Claude Code hooks that block force pushes
+    and destructive Git commands.
+  tags:
+  - positive
+  expected:
+    should_trigger: true
+- name: positive 5
+  prompt: I need an agent to Add Claude Code hooks that block force pushes and destructive
+    Git commands.
+  tags:
+  - positive
+  - ambiguous
+  expected:
+    should_trigger: true
+- name: collision with related skill
+  prompt: Resolve this in-progress merge conflict.
+  tags:
+  - negative
+  - collision
+  expected:
+    should_trigger: false
+- name: conceptual explanation only
+  prompt: Explain what a unit test is without changing any repository.
+  tags:
+  - negative
+  expected:
+    should_trigger: false
+- name: copy edit only
+  prompt: Proofread this paragraph for grammar and punctuation.
+  tags:
+  - negative
+  expected:
+    should_trigger: false
+- name: unrelated status query
+  prompt: Summarize the current Git branch name and stop.
+  tags:
+  - negative
+  expected:
+    should_trigger: false
+- name: ambiguous unrelated request
+  prompt: Can you take a quick look and explain what this file does?
+  tags:
+  - negative
+  - ambiguous
+  expected:
+    should_trigger: false

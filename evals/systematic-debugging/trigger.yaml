@@ -1,0 +1,72 @@
+skill: systematic-debugging
+description: Use when encountering any bug, test failure, or unexpected behavior,
+  before proposing fixes
+cases:
+- name: positive 1
+  prompt: A test started failing after the dependency update; find the root cause
+    before fixing it.
+  tags:
+  - positive
+  expected:
+    should_trigger: true
+- name: positive 2
+  prompt: 'Please help: A test started failing after the dependency update; find the
+    root cause before fixing it.'
+  tags:
+  - positive
+  expected:
+    should_trigger: true
+- name: positive 3
+  prompt: In this repository, A test started failing after the dependency update;
+    find the root cause before fixing it.
+  tags:
+  - positive
+  expected:
+    should_trigger: true
+- name: positive 4
+  prompt: Before changing anything, A test started failing after the dependency update;
+    find the root cause before fixing it.
+  tags:
+  - positive
+  expected:
+    should_trigger: true
+- name: positive 5
+  prompt: I need an agent to A test started failing after the dependency update; find
+    the root cause before fixing it.
+  tags:
+  - positive
+  - ambiguous
+  expected:
+    should_trigger: true
+- name: collision with related skill
+  prompt: Implement this new feature whose behavior is already specified.
+  tags:
+  - negative
+  - collision
+  expected:
+    should_trigger: false
+- name: conceptual explanation only
+  prompt: Explain what a unit test is without changing any repository.
+  tags:
+  - negative
+  expected:
+    should_trigger: false
+- name: copy edit only
+  prompt: Proofread this paragraph for grammar and punctuation.
+  tags:
+  - negative
+  expected:
+    should_trigger: false
+- name: unrelated status query
+  prompt: Summarize the current Git branch name and stop.
+  tags:
+  - negative
+  expected:
+    should_trigger: false
+- name: ambiguous unrelated request
+  prompt: Can you take a quick look and explain what this file does?
+  tags:
+  - negative
+  - ambiguous
+  expected:
+    should_trigger: false

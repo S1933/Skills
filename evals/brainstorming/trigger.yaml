@@ -1,0 +1,71 @@
+skill: brainstorming
+description: Use when creating features, components, functionality, or any behaviour
+  change that requires intent and design to be clarified before implementation.
+cases:
+- name: positive 1
+  prompt: I want to add team sharing; help me decide the design before coding.
+  tags:
+  - positive
+  expected:
+    should_trigger: true
+- name: positive 2
+  prompt: 'Please help: I want to add team sharing; help me decide the design before
+    coding.'
+  tags:
+  - positive
+  expected:
+    should_trigger: true
+- name: positive 3
+  prompt: In this repository, I want to add team sharing; help me decide the design
+    before coding.
+  tags:
+  - positive
+  expected:
+    should_trigger: true
+- name: positive 4
+  prompt: Before changing anything, I want to add team sharing; help me decide the
+    design before coding.
+  tags:
+  - positive
+  expected:
+    should_trigger: true
+- name: positive 5
+  prompt: I need an agent to I want to add team sharing; help me decide the design
+    before coding.
+  tags:
+  - positive
+  - ambiguous
+  expected:
+    should_trigger: true
+- name: collision with related skill
+  prompt: Write the implementation plan for this already-approved specification.
+  tags:
+  - negative
+  - collision
+  expected:
+    should_trigger: false
+- name: conceptual explanation only
+  prompt: Explain what a unit test is without changing any repository.
+  tags:
+  - negative
+  expected:
+    should_trigger: false
+- name: copy edit only
+  prompt: Proofread this paragraph for grammar and punctuation.
+  tags:
+  - negative
+  expected:
+    should_trigger: false
+- name: unrelated status query
+  prompt: Summarize the current Git branch name and stop.
+  tags:
+  - negative
+  expected:
+    should_trigger: false
+- name: ambiguous unrelated request
+  prompt: Can you take a quick look and explain what this file does?
+  tags:
+  - negative
+  - ambiguous
+  expected:
+    should_trigger: false

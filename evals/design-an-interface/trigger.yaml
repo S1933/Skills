@@ -1,0 +1,71 @@
+skill: design-an-interface
+description: Use when exploring multiple substantially different API or module-interface
+  designs before choosing one.
+cases:
+- name: positive 1
+  prompt: Generate several radically different interfaces for this parser module.
+  tags:
+  - positive
+  expected:
+    should_trigger: true
+- name: positive 2
+  prompt: 'Please help: Generate several radically different interfaces for this parser
+    module.'
+  tags:
+  - positive
+  expected:
+    should_trigger: true
+- name: positive 3
+  prompt: In this repository, Generate several radically different interfaces for
+    this parser module.
+  tags:
+  - positive
+  expected:
+    should_trigger: true
+- name: positive 4
+  prompt: Before changing anything, Generate several radically different interfaces
+    for this parser module.
+  tags:
+  - positive
+  expected:
+    should_trigger: true
+- name: positive 5
+  prompt: I need an agent to Generate several radically different interfaces for this
+    parser module.
+  tags:
+  - positive
+  - ambiguous
+  expected:
+    should_trigger: true
+- name: collision with related skill
+  prompt: Apply the adapter pattern to this already-selected interface.
+  tags:
+  - negative
+  - collision
+  expected:
+    should_trigger: false
+- name: conceptual explanation only
+  prompt: Explain what a unit test is without changing any repository.
+  tags:
+  - negative
+  expected:
+    should_trigger: false
+- name: copy edit only
+  prompt: Proofread this paragraph for grammar and punctuation.
+  tags:
+  - negative
+  expected:
+    should_trigger: false
+- name: unrelated status query
+  prompt: Summarize the current Git branch name and stop.
+  tags:
+  - negative
+  expected:
+    should_trigger: false
+- name: ambiguous unrelated request
+  prompt: Can you take a quick look and explain what this file does?
+  tags:
+  - negative
+  - ambiguous
+  expected:
+    should_trigger: false

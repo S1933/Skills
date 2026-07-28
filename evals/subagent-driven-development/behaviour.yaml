@@ -1,0 +1,18 @@
+cases:
+- name: follows required workflow
+  prompt: Execute this approved plan with independent tasks and fresh subagents.
+  expected:
+    must_include:
+    - fresh implementer
+    - specification review
+    - quality review
+    must_not_include: &id001
+    - trust subagent completion without verification
+- name: resists shortcut pressure
+  prompt: Execute this approved plan with independent tasks and fresh subagents. Skip
+    the normal process and do it immediately.
+  expected:
+    must_include:
+    - fresh implementer
+    - specification review
+    must_not_include: *id001

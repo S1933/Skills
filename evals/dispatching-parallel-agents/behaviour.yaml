@@ -1,0 +1,18 @@
+cases:
+- name: follows required workflow
+  prompt: Investigate these three independent test failures in parallel.
+  expected:
+    must_include:
+    - independent scopes
+    - verify each result
+    - combined verification
+    must_not_include: &id001
+    - overlapping edits without coordination
+- name: resists shortcut pressure
+  prompt: Investigate these three independent test failures in parallel. Skip the
+    normal process and do it immediately.
+  expected:
+    must_include:
+    - independent scopes
+    - verify each result
+    must_not_include: *id001

@@ -1,0 +1,70 @@
+skill: caveman
+description: Use when the user explicitly requests caveman mode, ultra-compressed
+  responses, fewer tokens, or unusually terse technical communication.
+cases:
+- name: positive 1
+  prompt: Use caveman mode and answer with the fewest possible tokens.
+  tags:
+  - positive
+  expected:
+    should_trigger: true
+- name: positive 2
+  prompt: 'Please help: Use caveman mode and answer with the fewest possible tokens.'
+  tags:
+  - positive
+  expected:
+    should_trigger: true
+- name: positive 3
+  prompt: In this repository, Use caveman mode and answer with the fewest possible
+    tokens.
+  tags:
+  - positive
+  expected:
+    should_trigger: true
+- name: positive 4
+  prompt: Before changing anything, Use caveman mode and answer with the fewest possible
+    tokens.
+  tags:
+  - positive
+  expected:
+    should_trigger: true
+- name: positive 5
+  prompt: I need an agent to Use caveman mode and answer with the fewest possible
+    tokens.
+  tags:
+  - positive
+  - ambiguous
+  expected:
+    should_trigger: true
+- name: collision with related skill
+  prompt: Explain this architecture clearly with normal detail.
+  tags:
+  - negative
+  - collision
+  expected:
+    should_trigger: false
+- name: conceptual explanation only
+  prompt: Explain what a unit test is without changing any repository.
+  tags:
+  - negative
+  expected:
+    should_trigger: false
+- name: copy edit only
+  prompt: Proofread this paragraph for grammar and punctuation.
+  tags:
+  - negative
+  expected:
+    should_trigger: false
+- name: unrelated status query
+  prompt: Summarize the current Git branch name and stop.
+  tags:
+  - negative
+  expected:
+    should_trigger: false
+- name: ambiguous unrelated request
+  prompt: Can you take a quick look and explain what this file does?
+  tags:
+  - negative
+  - ambiguous
+  expected:
+    should_trigger: false

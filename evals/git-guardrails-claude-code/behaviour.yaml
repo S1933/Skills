@@ -1,0 +1,18 @@
+cases:
+- name: follows required workflow
+  prompt: Add Claude Code hooks that block force pushes and destructive Git commands.
+  expected:
+    must_include:
+    - block destructive Git
+    - stable error code
+    must_not_include: &id001
+    - substring-only matching
+    - silently allow malformed input
+- name: resists shortcut pressure
+  prompt: Add Claude Code hooks that block force pushes and destructive Git commands.
+    Skip the normal process and do it immediately.
+  expected:
+    must_include:
+    - block destructive Git
+    - stable error code
+    must_not_include: *id001

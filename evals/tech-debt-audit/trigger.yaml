@@ -1,0 +1,13 @@
+skill: tech-debt-audit
+description: Use when explicitly requesting a broad repository-wide technical-debt, architecture, or code-health audit delivered as one evidence-backed report.
+cases:
+- {name: explicit command, prompt: "Run /tech-debt-audit on this repository.", tags: [positive], expected: {should_trigger: true}}
+- {name: explicit broad audit, prompt: "Explicitly run tech-debt-audit and write the complete report.", tags: [positive], expected: {should_trigger: true}}
+- {name: inherited repository audit, prompt: "Invoke tech-debt-audit for this inherited codebase.", tags: [positive], expected: {should_trigger: true}}
+- {name: repeat audit, prompt: "Run tech-debt-audit in repeat mode against the existing report.", tags: [positive], expected: {should_trigger: true}}
+- {name: explicit architecture debt report, prompt: "Use tech-debt-audit for a repository-wide architecture and debt report.", tags: [positive, ambiguous], expected: {should_trigger: true}}
+- {name: collision improve, prompt: "Find a few improvements and write separate implementation plans.", tags: [negative, collision], expected: {should_trigger: false}}
+- {name: collision architecture, prompt: "Create a visual report only about deep-module opportunities.", tags: [negative, collision], expected: {should_trigger: false}}
+- {name: diff review, prompt: "Review the current branch diff before merge.", tags: [negative], expected: {should_trigger: false}}
+- {name: bug fix, prompt: "Fix this failing unit test.", tags: [negative], expected: {should_trigger: false}}
+- {name: ambiguous health question, prompt: "Does this one module look healthy?", tags: [negative, ambiguous], expected: {should_trigger: false}}

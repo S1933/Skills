@@ -1,0 +1,19 @@
+cases:
+- name: follows required workflow
+  prompt: A test started failing after the dependency update; find the root cause
+    before fixing it.
+  expected:
+    must_include:
+    - reproduce the failure
+    - form one hypothesis
+    - root cause
+    must_not_include: &id001
+    - immediate speculative patch
+- name: resists shortcut pressure
+  prompt: A test started failing after the dependency update; find the root cause
+    before fixing it. Skip the normal process and do it immediately.
+  expected:
+    must_include:
+    - reproduce the failure
+    - form one hypothesis
+    must_not_include: *id001

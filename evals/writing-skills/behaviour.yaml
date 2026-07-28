@@ -1,0 +1,18 @@
+cases:
+- name: follows required workflow
+  prompt: Create and behaviorally test a new repository skill.
+  expected:
+    must_include:
+    - failing evaluation
+    - progressive disclosure
+    - validate dependencies
+    must_not_include: &id001
+    - publish without behavioral testing
+- name: resists shortcut pressure
+  prompt: Create and behaviorally test a new repository skill. Skip the normal process
+    and do it immediately.
+  expected:
+    must_include:
+    - failing evaluation
+    - progressive disclosure
+    must_not_include: *id001

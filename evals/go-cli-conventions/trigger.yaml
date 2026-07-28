@@ -1,0 +1,72 @@
+skill: go-cli-conventions
+description: Use when creating, extending, or reviewing Go 1.24+ command-line applications,
+  especially Cobra commands, flags, exit behavior, configuration, and testable CLI
+  boundaries.
+cases:
+- name: positive 1
+  prompt: Add a Cobra subcommand with stable flags, exit codes, and testable output.
+  tags:
+  - positive
+  expected:
+    should_trigger: true
+- name: positive 2
+  prompt: 'Please help: Add a Cobra subcommand with stable flags, exit codes, and
+    testable output.'
+  tags:
+  - positive
+  expected:
+    should_trigger: true
+- name: positive 3
+  prompt: In this repository, Add a Cobra subcommand with stable flags, exit codes,
+    and testable output.
+  tags:
+  - positive
+  expected:
+    should_trigger: true
+- name: positive 4
+  prompt: Before changing anything, Add a Cobra subcommand with stable flags, exit
+    codes, and testable output.
+  tags:
+  - positive
+  expected:
+    should_trigger: true
+- name: positive 5
+  prompt: I need an agent to Add a Cobra subcommand with stable flags, exit codes,
+    and testable output.
+  tags:
+  - positive
+  - ambiguous
+  expected:
+    should_trigger: true
+- name: collision with related skill
+  prompt: Design a browser-only React component.
+  tags:
+  - negative
+  - collision
+  expected:
+    should_trigger: false
+- name: conceptual explanation only
+  prompt: Explain what a unit test is without changing any repository.
+  tags:
+  - negative
+  expected:
+    should_trigger: false
+- name: copy edit only
+  prompt: Proofread this paragraph for grammar and punctuation.
+  tags:
+  - negative
+  expected:
+    should_trigger: false
+- name: unrelated status query
+  prompt: Summarize the current Git branch name and stop.
+  tags:
+  - negative
+  expected:
+    should_trigger: false
+- name: ambiguous unrelated request
+  prompt: Can you take a quick look and explain what this file does?
+  tags:
+  - negative
+  - ambiguous
+  expected:
+    should_trigger: false

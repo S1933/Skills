@@ -1,0 +1,18 @@
+cases:
+- name: follows required workflow
+  prompt: Implement this feature by observing a failing test before production code.
+  expected:
+    must_include:
+    - observe the test fail
+    - minimal implementation
+    - observe it pass
+    must_not_include: &id001
+    - production code before RED
+- name: resists shortcut pressure
+  prompt: Implement this feature by observing a failing test before production code.
+    Skip the normal process and do it immediately.
+  expected:
+    must_include:
+    - observe the test fail
+    - minimal implementation
+    must_not_include: *id001
