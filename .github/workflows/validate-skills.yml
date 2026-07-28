@@ -1,0 +1,40 @@
+name: Validate skills
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install validation dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes graphviz shellcheck
+          python -m pip install --requirement requirements-dev.txt
+
+      - name: Run validator unit tests
+        run: |
+          python -m unittest discover --start-directory tests --pattern "test_*.py" --verbose
+          python -m unittest codex/tests/test_skill_policy.py --verbose
+
+      - name: Run Git guardrail fixtures
+        run: git-guardrails-claude-code/tests/test-guardrail.sh
+
+      - name: Validate catalogue
+        run: python scripts/validate-skills.py

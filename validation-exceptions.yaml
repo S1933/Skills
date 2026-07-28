@@ -1,0 +1,33 @@
+exceptions:
+  # Phase 3 rewrites these descriptions to the canonical trigger-only form.
+  - {code: E010_DESCRIPTION_TRIGGER, path: brainstorming/SKILL.md, reason: Phase 3 metadata migration}
+  - {code: E010_DESCRIPTION_TRIGGER, path: caveman/SKILL.md, reason: Phase 3 metadata migration}
+  - {code: E010_DESCRIPTION_TRIGGER, path: codebase-design/SKILL.md, reason: Phase 3 metadata migration}
+  - {code: E010_DESCRIPTION_TRIGGER, path: decision-mapping/SKILL.md, reason: Phase 3 metadata migration}
+  - {code: E010_DESCRIPTION_TRIGGER, path: design-an-interface/SKILL.md, reason: Phase 3 metadata migration}
+  - {code: E010_DESCRIPTION_TRIGGER, path: domain-modeling/SKILL.md, reason: Phase 3 metadata migration}
+  - {code: E010_DESCRIPTION_TRIGGER, path: grill-me/SKILL.md, reason: Phase 3 metadata migration}
+  - {code: E010_DESCRIPTION_TRIGGER, path: grill-with-docs/SKILL.md, reason: Phase 3 metadata migration}
+  - {code: E010_DESCRIPTION_TRIGGER, path: grilling/SKILL.md, reason: Phase 3 metadata migration}
+  - {code: E010_DESCRIPTION_TRIGGER, path: handoff/SKILL.md, reason: Phase 3 metadata migration}
+  - {code: E010_DESCRIPTION_TRIGGER, path: implement/SKILL.md, reason: Phase 3 metadata migration}
+  - {code: E010_DESCRIPTION_TRIGGER, path: improve-codebase-architecture/SKILL.md, reason: Phase 3 metadata migration}
+  - {code: E010_DESCRIPTION_TRIGGER, path: improve/SKILL.md, reason: Phase 3 metadata migration}
+  - {code: E011_DESCRIPTION_LENGTH, path: improve/SKILL.md, reason: Phase 3 metadata migration}
+  - {code: E010_DESCRIPTION_TRIGGER, path: migrate-to-shoehorn/SKILL.md, reason: Phase 3 metadata migration}
+  - {code: E010_DESCRIPTION_TRIGGER, path: private-skills/[REMOVED-INTERNAL-SKILL]/SKILL.md, reason: Phase 3 metadata migration}
+  - {code: E010_DESCRIPTION_TRIGGER, path: private-skills/[REMOVED-INTERNAL-SKILL]/SKILL.md, reason: Phase 3 metadata migration}
+  - {code: E010_DESCRIPTION_TRIGGER, path: prototype/SKILL.md, reason: Phase 3 metadata migration}
+  - {code: E010_DESCRIPTION_TRIGGER, path: qa/SKILL.md, reason: Phase 3 metadata migration}
+  - {code: E010_DESCRIPTION_TRIGGER, path: request-refactor-plan/SKILL.md, reason: Phase 3 metadata migration}
+  - {code: E010_DESCRIPTION_TRIGGER, path: review-scope/SKILL.md, reason: Phase 3 metadata migration}
+  - {code: E010_DESCRIPTION_TRIGGER, path: setup-pre-commit/SKILL.md, reason: Phase 3 metadata migration}
+  - {code: E010_DESCRIPTION_TRIGGER, path: tech-debt-audit/SKILL.md, reason: Phase 3 metadata migration}
+  - {code: E011_DESCRIPTION_LENGTH, path: tech-debt-audit/SKILL.md, reason: Phase 3 metadata migration}
+  - {code: E010_DESCRIPTION_TRIGGER, path: to-issues/SKILL.md, reason: Phase 3 metadata migration}
+  - {code: E010_DESCRIPTION_TRIGGER, path: to-prd/SKILL.md, reason: Phase 3 metadata migration}
+  - {code: E010_DESCRIPTION_TRIGGER, path: triage/SKILL.md, reason: Phase 3 metadata migration}
+  - {code: E010_DESCRIPTION_TRIGGER, path: ubiquitous-language/SKILL.md, reason: Phase 3 metadata migration}
+
+  # Phase 4 replaces these legacy command aliases with canonical skill names.
+  - {code: E016_ALIAS_UNKNOWN, path: implement/SKILL.md, reason: Phase 4 alias migration}
