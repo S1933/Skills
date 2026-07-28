@@ -1,6 +1,7 @@
 ---
 name: brainstorming
-description: You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation.
+description: Use when creating features, components, functionality, or any behaviour change that requires intent and design to be clarified before implementation.
+compatibility: Agent Skills compatible; the optional visual companion requires Node.js and a local browser.
 ---
 
 # Brainstorming Ideas Into Designs

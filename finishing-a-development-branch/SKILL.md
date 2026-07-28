@@ -1,6 +1,7 @@
 ---
 name: finishing-a-development-branch
-description: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work - guides completion of development work by presenting structured options for merge, PR, or cleanup
+description: Use when implementation and verification are complete and the branch needs an explicit merge, pull-request, retention, or cleanup decision.
+compatibility: Requires Git; pull-request options require a configured repository host integration.
 ---
 
 # Finishing a Development Branch

@@ -44,6 +44,7 @@ class ValidatorTests(unittest.TestCase):
         description: str | None = None,
         requires_skills: list[str] | None = None,
         visibility: str = "public",
+        clients: list[str] | None = None,
     ) -> dict[str, object]:
         skill_path = path or fixture
         destination = self.root / skill_path
@@ -55,6 +56,7 @@ class ValidatorTests(unittest.TestCase):
             "description": description or "Use when exercising a validator fixture.",
             "invocation": "automatic",
             "visibility": visibility,
+            "clients": clients or ["agent-skills"],
             "requires_skills": requires_skills or [],
             "optional_skills": [],
             "referenced_skills": [],
@@ -147,6 +149,22 @@ class ValidatorTests(unittest.TestCase):
         )
         skill.write_text(text, encoding="utf-8")
         self.assertIn("E008_DISABLE_INVOCATION_TYPE", self.codes([entry]))
+
+    def test_nonportable_skill_requires_compatibility_metadata(self) -> None:
+        entry = self.add_skill("valid-skill", clients=["codex"])
+        self.assertIn("E026_COMPATIBILITY_REQUIRED", self.codes([entry]))
+
+    def test_skill_symlink_cannot_escape_repository(self) -> None:
+        entry = self.add_skill("valid-skill")
+        skill = self.root / "valid-skill" / "SKILL.md"
+        external = self.root.parent / "external-skill.md"
+        external.write_text(skill.read_text(encoding="utf-8"), encoding="utf-8")
+        skill.unlink()
+        skill.symlink_to(external)
+        try:
+            self.assertIn("E027_SYMLINK_OUTSIDE", self.codes([entry]))
+        finally:
+            external.unlink()
 
 
 if __name__ == "__main__":

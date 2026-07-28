@@ -1,6 +1,7 @@
 ---
 name: improve-codebase-architecture
-description: Scan a codebase for deepening opportunities, present them as a visual HTML report, then grill through whichever one you pick. Narrowly about architectural depth (deep modules, seams) using the /codebase-design vocabulary — unlike /tech-debt-audit (broad debt report file) or /improve (self-contained handoff plans for another agent to execute).
+description: Use when explicitly auditing a codebase for deep-module, seam, interface, or information-hiding opportunities in an architecture-focused visual report.
+compatibility: Requires repository read access and a local browser for the visual report.
 disable-model-invocation: true
 ---
 

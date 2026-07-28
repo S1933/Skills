@@ -1,6 +1,6 @@
 ---
 name: decision-mapping
-description: Turn a loose idea into a sequenced map of investigation tickets, then drive them to resolution one at a time.
+description: Use when explicitly invoking /decision-mapping to turn a loose idea into sequenced investigation tickets whose findings drive later decisions.
 disable-model-invocation: true
 ---
 

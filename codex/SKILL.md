@@ -1,6 +1,7 @@
 ---
 name: codex
-description: Use when Codex needs a second opinion, verification, or deeper research on technical matters. This includes researching how a library or API works, confirming implementation approaches, verifying technical assumptions, understanding complex code patterns, or getting alternative perspectives on architectural decisions. The agent leverages the Codex CLI to provide independent analysis and validation.
+description: Use when an independent technical second opinion, verification, repository analysis, or deeper library or API research would materially reduce uncertainty.
+compatibility: Requires the Codex CLI with exec and sandbox support.
 ---
 
 # Codex - Second Opinion Agent

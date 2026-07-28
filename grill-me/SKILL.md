@@ -1,6 +1,6 @@
 ---
 name: grill-me
-description: A relentless interview to sharpen a plan or design.
+description: Use when explicitly invoking /grill-me to stress-test and sharpen a plan or design.
 disable-model-invocation: true
 ---
 

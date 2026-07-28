@@ -1,6 +1,7 @@
 ---
 name: subagent-driven-development
 description: Use when executing implementation plans with independent tasks in the current session
+compatibility: Requires a client with subagent support and Bash.
 ---
 
 # Subagent-Driven Development

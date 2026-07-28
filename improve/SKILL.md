@@ -1,6 +1,7 @@
 ---
 name: improve
-description: Survey any codebase as a senior advisor and produce prioritized, self-contained implementation plans for OTHER models/agents to execute. Strictly read-only on source code — never implements, fixes, or refactors anything itself. Use when asked to audit a codebase, find improvement opportunities (bugs, security, performance, test coverage, tech debt, migrations, DX), suggest features or where to take the project next (roadmap, product direction), or generate handoff plans for another agent to implement. Unlike /tech-debt-audit (one broad debt report committed to the repo) and /improve-codebase-architecture (an architecture-only HTML report), the deliverable here is multiple self-contained per-opportunity handoff plans and the scope spans all improvement types.
+description: Use when surveying a codebase for prioritized improvement opportunities across correctness, security, performance, testing, maintainability, developer experience, migrations, or product direction.
+compatibility: Requires repository read access; parallel subagent support is recommended.
 license: MIT
 metadata:
   author: shadcn

@@ -1,6 +1,7 @@
 ---
 name: triage
-description: Move issues through a state machine of triage roles — categorise, reproduce, grill if needed, and write agent-ready briefs.
+description: Use when explicitly moving issue reports through categorisation, reproduction, clarification, and agent-ready briefing.
+compatibility: Requires a configured project issue-tracker integration.
 disable-model-invocation: true
 ---
 

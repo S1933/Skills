@@ -1,6 +1,7 @@
 ---
 name: to-prd
-description: Turn the current conversation into a PRD and publish it to the project issue tracker — no interview, just synthesis of what you've already discussed.
+description: Use when explicitly publishing requirements already established in conversation as a PRD without another discovery interview.
+compatibility: Requires a configured project issue-tracker integration.
 disable-model-invocation: true
 ---
 

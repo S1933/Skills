@@ -1,6 +1,7 @@
 ---
 name: git-guardrails-claude-code
 description: Use when setting up Claude Code hooks to prevent pushes or destructive Git operations from running without user control.
+compatibility: Requires Claude Code with Bash PreToolUse hooks and Python 3.
 ---
 
 # Setup Git Guardrails

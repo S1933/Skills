@@ -1,6 +1,7 @@
 ---
 name: tech-debt-audit
-description: Thorough, user-invoked tech debt and architecture audit of the current codebase. Produces TECH_DEBT_AUDIT.md with file-cited findings, severity, effort estimates, and a required "looks bad but is actually fine" section. Use when the user asks for a debt audit, codebase health check, architecture review, or code quality assessment of an entire repo. Does not auto-invoke. Unlike /improve (read-only handoff plans for another agent to execute) and /improve-codebase-architecture (architecture-depth-only HTML report), this writes one broad debt report file into the repo.
+description: Use when explicitly requesting a broad repository-wide technical-debt, architecture, or code-health audit delivered as one evidence-backed report.
+compatibility: Requires repository read access and permission to write the report file.
 disable-model-invocation: true
 ---
 

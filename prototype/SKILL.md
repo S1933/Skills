@@ -1,6 +1,7 @@
 ---
 name: prototype
-description: Build a throwaway prototype to flesh out a design — a runnable terminal app for state/business-logic questions, or several radically different UI variations toggleable from one route.
+description: Use when explicitly building a throwaway prototype to answer design questions about business logic, state transitions, or alternative user interfaces.
+compatibility: Terminal prototypes are portable; visual UI mode requires Node.js and a local browser.
 disable-model-invocation: true
 ---
 

@@ -1,6 +1,7 @@
 ---
 name: design-an-interface
-description: Generate multiple radically different interface designs for a module using parallel sub-agents. Use when user wants to design an API, explore interface options, compare module shapes, or mentions "design it twice".
+description: Use when exploring multiple substantially different API or module-interface designs before choosing one.
+compatibility: Requires a client with parallel subagent support.
 ---
 
 # Design an Interface

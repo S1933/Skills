@@ -1,6 +1,7 @@
 ---
 name: review-scope
-description: Use at the start of any code review to establish the base branch and gather the full set of changes to review — committed, staged, unstaged, and relevant untracked work. A building block that only scopes the diff — unlike /requesting-code-review (dispatches a reviewer subagent) and /receiving-code-review (how to respond to feedback you got).
+description: Use when beginning a code review that must include committed, staged, unstaged, and relevant untracked changes against the correct base.
+compatibility: Requires Git repository access.
 ---
 
 # Review Scope
