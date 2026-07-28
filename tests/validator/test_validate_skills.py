@@ -168,6 +168,15 @@ class ValidatorTests(unittest.TestCase):
         )
         self.assertNotIn("E013_BROKEN_LINK", self.codes([entry]))
 
+    def test_deliberately_invalid_flowchart_example_is_not_compiled_as_dot(self) -> None:
+        path = ROOT / "writing-skills" / "references" / "full-guidance.md"
+        diagnostics = []
+        blocks = self.validator.validate_examples(path, ROOT, diagnostics)
+        self.assertFalse(
+            any(block.lstrip().startswith("step1 [") for block in blocks),
+            "the anti-pattern fragment must use a non-DOT fence",
+        )
+
     def test_missing_dependency_has_stable_identifier(self) -> None:
         entry = self.add_skill("valid-skill", requires_skills=["absent-skill"])
         self.assertIn("E015_SKILL_DEPENDENCY_MISSING", self.codes([entry]))

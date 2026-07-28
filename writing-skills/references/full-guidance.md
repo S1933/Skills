@@ -601,7 +601,7 @@ example-js.js, example-py.py, example-go.go
 **Why bad:** Mediocre quality, maintenance burden
 
 ### ❌ Code in Flowcharts
-```dot
+```text
 step1 [label="import fs"];
 step2 [label="read file"];
 ```
