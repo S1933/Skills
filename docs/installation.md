@@ -28,6 +28,8 @@ cp .local/skills-environment.example.yaml .local/skills-environment.yaml
 
 The real file is ignored by Git. Never commit hosts, users, account identifiers, project roots, or credentials.
 
+Existing shells that source `[REMOVED-INTERNAL-SKILL]/rr.zsh` continue to work through a sanitized compatibility shim; new installations should source `private-skills/[REMOVED-INTERNAL-SKILL]/rr.zsh` directly.
+
 ## Validate an update
 
 ```bash

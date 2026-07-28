@@ -15,8 +15,8 @@ Full retained licence texts are in [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSE
 ## Improve
 
 - Upstream attribution recorded in the adapted skill: shadcn
-- Upstream project: [shadcn-ui/ui](https://github.com/shadcn-ui/ui)
-- Licence: MIT, copyright 2023 shadcn
+- Upstream project: [shadcn/improve](https://github.com/shadcn/improve)
+- Licence: MIT, copyright 2026 shadcn
 - Local changes include evidence/safety contracts, progressive disclosure, and catalogue integration.
 
 ## Anthropic documentation
