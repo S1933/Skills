@@ -1,113 +1,90 @@
-# Skills
+<!-- Generated from skills-manifest.yaml; do not edit manually. -->
 
-A personal collection of [Agent Skills](https://agentskills.io/specification) for Claude Code. Each subdirectory is one skill with a `SKILL.md` (plus optional supporting files). Skills marked **(manual)** set `disable-model-invocation: true` — they run only when you invoke them explicitly (e.g. `/grilling`); the rest can auto-trigger from their description.
+# Skills catalogue
 
-## Planning & specification
+A validated catalogue of portable and client-specific Agent Skills. The repository is in stabilization mode: improve existing skills and safety/evaluation coverage before proposing new functional skills.
 
-| Skill | When to use |
-|---|---|
-| [brainstorming](brainstorming/) | Before any creative work — explore intent, requirements, and design before implementing. |
-| [grilling](grilling/) | Stress-test a plan or design with a relentless one-question-at-a-time interview. |
-| [grill-me](grill-me/) **(manual)** | Thin wrapper that runs a `/grilling` session. |
-| [grill-with-docs](grill-with-docs/) **(manual)** | `/grilling` that also produces ADRs + glossary via `/domain-modeling`. |
-| [writing-plans](writing-plans/) | Turn a spec into a written multi-step implementation plan before touching code. |
-| [executing-plans](executing-plans/) **(manual)** | Execute a written plan in a separate session with review checkpoints. |
-| [to-prd](to-prd/) **(manual)** | Synthesize the current conversation into a PRD on the issue tracker. |
-| [to-issues](to-issues/) **(manual)** | Break a plan/PRD into independently-grabbable, vertically-sliced issues. |
-| [request-refactor-plan](request-refactor-plan/) | Interview into a tiny-commit refactor plan, filed as a GitHub issue. |
-| [decision-mapping](decision-mapping/) **(manual)** | Turn a loose idea into a sequenced map of investigation tickets. |
-| [handoff](handoff/) **(manual)** | Compact the conversation into a handoff doc for a fresh agent. |
-| [prototype](prototype/) **(manual)** | Build a throwaway prototype to flesh out a design. |
+- [Installation](docs/installation.md)
+- [Authoring standard](docs/skill-authoring-standard.md)
+- [Contributing](CONTRIBUTING.md)
+- [Detailed generated catalogue](docs/generated/catalogue.md)
+- [Dependency graph](docs/generated/dependency-graph.md)
+- [Evaluation format](docs/evaluations.md)
+- [Provenance](NOTICE.md)
 
-## Implementation & execution
+## Public skills (48)
 
-| Skill | When to use |
-|---|---|
-| [implement](implement/) **(manual)** | Implement work from a PRD/issues using canonical TDD, verification, and code-review skills. |
-| [test-driven-development](test-driven-development/) | Any feature/bugfix — test first, watch it fail, minimal code, refactor. |
-| [subagent-driven-development](subagent-driven-development/) | Execute plans with independent tasks in the current session. |
-| [dispatching-parallel-agents](dispatching-parallel-agents/) | 2+ independent tasks with no shared state or sequencing. |
-| [using-git-worktrees](using-git-worktrees/) | Isolate feature work in a dedicated workspace. |
-| [migrate-to-shoehorn](migrate-to-shoehorn/) | Replace `as` type assertions in tests with `@total-typescript/shoehorn`. |
-| [setup-pre-commit](setup-pre-commit/) | Add Husky + lint-staged pre-commit hooks (format/typecheck/test). |
+| Skill | Invocation | Clients | Description |
+|---|---|---|---|
+| [`adapter-pattern`](adapter-pattern/) | automatic | agent-skills | Use when one domain model must interoperate with multiple external APIs, file formats, providers, CLIs, storage engines, or versioned protocols without leaking vendor details into core logic. |
+| [`atomic-file-write`](atomic-file-write/) | automatic | agent-skills | Use when replacing configuration, state, generated, or user-owned files where crashes, partial writes, permissions, concurrent readers, or durability can corrupt observable state. |
+| [`binary-distribution`](binary-distribution/) | automatic | agent-skills | Use when releasing compiled command-line tools across operating systems or architectures, including version metadata, archives, checksums, signing, installers, and reproducible release automation. |
+| [`brainstorming`](brainstorming/) | automatic | agent-skills | Use when creating features, components, functionality, or any behaviour change that requires intent and design to be clarified before implementation. |
+| [`caveman`](caveman/) | automatic | agent-skills | Use when the user explicitly requests caveman mode, ultra-compressed responses, fewer tokens, or unusually terse technical communication. |
+| [`codebase-design`](codebase-design/) | automatic | agent-skills | Use when designing or improving module interfaces, seams, information hiding, testability, navigability, or deep-module boundaries. |
+| [`codex`](codex/) | automatic | codex | Use when an independent technical second opinion, verification, repository analysis, or deeper library or API research would materially reduce uncertainty. |
+| [`decision-mapping`](decision-mapping/) | manual | agent-skills | Use when explicitly invoking /decision-mapping to turn a loose idea into sequenced investigation tickets whose findings drive later decisions. |
+| [`design-an-interface`](design-an-interface/) | automatic | claude-code, codex, opencode | Use when exploring multiple substantially different API or module-interface designs before choosing one. |
+| [`dispatching-parallel-agents`](dispatching-parallel-agents/) | automatic | claude-code, codex, opencode | Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies |
+| [`domain-modeling`](domain-modeling/) | automatic | agent-skills | Use when defining domain terminology, ubiquitous language, bounded contexts, or architectural decisions tied to a domain model. |
+| [`embedded-fixtures`](embedded-fixtures/) | automatic | agent-skills | Use when binaries or tests need deterministic templates, schemas, migrations, defaults, or sample files packaged with the executable through Go embed or an equivalent resource mechanism. |
+| [`executing-plans`](executing-plans/) | manual | agent-skills | Use when explicitly invoking /executing-plans with an approved implementation plan in a separate session. |
+| [`finishing-a-development-branch`](finishing-a-development-branch/) | automatic | agent-skills | Use when implementation and verification are complete and the branch needs an explicit merge, pull-request, retention, or cleanup decision. |
+| [`git-guardrails-claude-code`](git-guardrails-claude-code/) | automatic | claude-code | Use when setting up Claude Code hooks to prevent pushes or destructive Git operations from running without user control. |
+| [`go-cli-conventions`](go-cli-conventions/) | automatic | agent-skills | Use when creating, extending, or reviewing Go 1.24+ command-line applications, especially Cobra commands, flags, exit behavior, configuration, and testable CLI boundaries. |
+| [`golden-file-testing`](golden-file-testing/) | automatic | agent-skills | Use when testing generated text, configuration, serialization, templates, compiler output, or other stable artifacts whose complete shape matters more than isolated fields. |
+| [`grill-me`](grill-me/) | manual | agent-skills | Use when explicitly invoking /grill-me to stress-test and sharpen a plan or design. |
+| [`grill-with-docs`](grill-with-docs/) | manual | agent-skills | Use when explicitly invoking /grill-with-docs to stress-test a plan while recording ADRs and a domain glossary. |
+| [`grilling`](grilling/) | automatic | agent-skills | Use when a plan or design needs a rigorous one-question-at-a-time stress test before implementation. |
+| [`handoff`](handoff/) | manual | agent-skills | Use when explicitly preparing the current conversation for another agent to continue with minimal context loss. |
+| [`implement`](implement/) | manual | claude-code, codex, opencode | Use when explicitly implementing work from an approved PRD, specification, or issue set. |
+| [`improve`](improve/) | automatic | agent-skills | Use when surveying a codebase for prioritized improvement opportunities across correctness, security, performance, testing, maintainability, developer experience, migrations, or product direction. |
+| [`improve-codebase-architecture`](improve-codebase-architecture/) | manual | agent-skills | Use when explicitly auditing a codebase for deep-module, seam, interface, or information-hiding opportunities in an architecture-focused visual report. |
+| [`migrate-to-shoehorn`](migrate-to-shoehorn/) | automatic | agent-skills | Use when TypeScript tests use as assertions for partial fixtures and should migrate to @total-typescript/shoehorn. |
+| [`prototype`](prototype/) | manual | agent-skills | Use when explicitly building a throwaway prototype to answer design questions about business logic, state transitions, or alternative user interfaces. |
+| [`qa`](qa/) | automatic | agent-skills | Use when the user wants a conversational QA session to report, investigate, and file reproducible software issues. |
+| [`receiving-code-review`](receiving-code-review/) | automatic | agent-skills | Use when review feedback must be understood, verified, prioritized, or challenged before implementation. |
+| [`repository-reconnaissance`](repository-reconnaissance/) | automatic | agent-skills | Use when an audit, review, plan, or unfamiliar repository task needs an evidence-based map of instructions, architecture, commands, history, and inspectable scope before conclusions are drawn. |
+| [`request-refactor-plan`](request-refactor-plan/) | automatic | agent-skills | Use when planning a risky or substantial refactor as safe incremental commits and a reviewable issue or RFC. |
+| [`requesting-code-review`](requesting-code-review/) | automatic | claude-code, codex, opencode | Use when implementation work needs an independent code review before completion, integration, or merge. |
+| [`resolving-merge-conflicts`](resolving-merge-conflicts/) | automatic | agent-skills | Use when you need to resolve an in-progress git merge/rebase conflict. |
+| [`review-scope`](review-scope/) | automatic | agent-skills | Use when beginning a code review that must include committed, staged, unstaged, and relevant untracked changes against the correct base. |
+| [`schema-validation`](schema-validation/) | automatic | agent-skills | Use when defining or reviewing validation for configuration files, API payloads, manifests, serialized models, cross-field invariants, or human-readable validation errors. |
+| [`setup-pre-commit`](setup-pre-commit/) | automatic | agent-skills | Use when adding or repairing Husky pre-commit automation for formatting, type checking, and tests in a JavaScript or TypeScript repository. |
+| [`subagent-driven-development`](subagent-driven-development/) | automatic | claude-code, codex, opencode | Use when executing implementation plans with independent tasks in the current session |
+| [`systematic-debugging`](systematic-debugging/) | automatic | agent-skills | Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes |
+| [`tech-debt-audit`](tech-debt-audit/) | manual | agent-skills | Use when explicitly requesting a broad repository-wide technical-debt, architecture, or code-health audit delivered as one evidence-backed report. |
+| [`test-driven-development`](test-driven-development/) | automatic | agent-skills | Use when implementing any feature or bugfix, before writing implementation code |
+| [`to-issues`](to-issues/) | manual | agent-skills | Use when explicitly converting an approved plan, specification, or PRD into independently assignable vertical-slice issues. |
+| [`to-prd`](to-prd/) | manual | agent-skills | Use when explicitly publishing requirements already established in conversation as a PRD without another discovery interview. |
+| [`triage`](triage/) | manual | agent-skills | Use when explicitly moving issue reports through categorisation, reproduction, clarification, and agent-ready briefing. |
+| [`ubiquitous-language`](ubiquitous-language/) | manual | agent-skills | Use when explicitly extracting or refining canonical domain terminology, definitions, ambiguities, and discouraged synonyms from the conversation. |
+| [`using-git-worktrees`](using-git-worktrees/) | automatic | agent-skills | Use when implementation work needs an isolated Git workspace or when an execution workflow requires isolation before changes begin. |
+| [`using-superpowers`](using-superpowers/) | manual | agent-skills | Use when explicitly invoking /using-superpowers at the start of a conversation where repository skills are available. |
+| [`verification-before-completion`](verification-before-completion/) | automatic | agent-skills | Use when about to claim work is complete, fixed, passing, ready to commit, or ready to merge. |
+| [`writing-plans`](writing-plans/) | automatic | agent-skills | Use when you have a spec or requirements for a multi-step task, before touching code |
+| [`writing-skills`](writing-skills/) | automatic | agent-skills | Use when creating new skills, editing existing skills, or verifying skills work before deployment |
 
-## Debugging
+## Private/environment-specific skills (4)
 
-| Skill | When to use |
-|---|---|
-| [systematic-debugging](systematic-debugging/) | Any bug, test failure, or unexpected behavior — before proposing fixes. |
+Private skills remain in the repository for local use but are excluded from public-only installation guidance and may require `.local/skills-environment.yaml`.
 
-## Code review & shipping
+| Skill | Invocation | Clients | Description |
+|---|---|---|---|
+| [`[REMOVED-INTERNAL-SKILL]`](private-skills/[REMOVED-INTERNAL-SKILL]/) | automatic | local-shell | Use when authoring, reviewing, testing, troubleshooting, or migrating OVH [REMOVED-INTERNAL-SKILL] workflow, action, worker-model, template, gate, matrix, service, or expression YAML. |
+| [`[REMOVED-INTERNAL-SKILL]`](private-skills/[REMOVED-INTERNAL-SKILL]/) | automatic | local-shell | Use when a locally configured [REMOVED-INTERNAL-SKILL] CLI is required to inspect or mutate issues, comments, assignments, transitions, Tempo entries, or Confluence pages. |
+| [`[REMOVED-INTERNAL-SKILL]`](private-skills/[REMOVED-INTERNAL-SKILL]/) | automatic | local-shell | Use when [redacted-infrastructure] smoke-test patterns fail literal HTML matching or the locale-specific pattern catalogue needs updating. |
+| [`[REMOVED-INTERNAL-SKILL]`](private-skills/[REMOVED-INTERNAL-SKILL]/) | automatic | local-shell | Use when syncing local project files to a configured development server through the rr Zsh function, or when rr produces unexpected results. |
 
-| Skill | When to use |
-|---|---|
-| [review-scope](review-scope/) | Gather the full diff (base branch + all layers) — a building block for reviews. |
-| [requesting-code-review](requesting-code-review/) | Dispatch a reviewer subagent with crafted context. |
-| [receiving-code-review](receiving-code-review/) | Respond to review feedback with rigor, not performative agreement. |
-| [verification-before-completion](verification-before-completion/) | Before claiming done — run verification and show evidence. |
-| [resolving-merge-conflicts](resolving-merge-conflicts/) | Resolve an in-progress merge/rebase conflict. |
-| [finishing-a-development-branch](finishing-a-development-branch/) | Decide how to integrate finished work (merge/PR/cleanup). |
+## Validate
 
-## Codebase audit & architecture
+```bash
+python3 -m pip install -r requirements-dev.txt
+python3 -m unittest discover --start-directory tests --pattern 'test_*.py'
+python3 scripts/generate-catalogue.py --check
+python3 scripts/generate-dependency-graph.py --check
+python3 scripts/validate-evals.py
+python3 scripts/validate-skills.py
+```
 
-| Skill | When to use |
-|---|---|
-| [improve](improve/) | Read-only senior-advisor survey → self-contained handoff plans for other agents. |
-| [tech-debt-audit](tech-debt-audit/) **(manual)** | One broad debt report (`TECH_DEBT_AUDIT.md`) committed to the repo. |
-| [improve-codebase-architecture](improve-codebase-architecture/) **(manual)** | Architecture-depth-only deepening opportunities as a visual HTML report. |
-| [codebase-design](codebase-design/) | Shared vocabulary for designing deep modules, seams, and interfaces. |
-| [domain-modeling](domain-modeling/) | Build/sharpen a project's domain model and record decisions. |
-| [ubiquitous-language](ubiquitous-language/) **(manual)** | Extract a DDD glossary (`UBIQUITOUS_LANGUAGE.md`) from the conversation. |
-| [design-an-interface](design-an-interface/) | Generate radically different interface designs via parallel sub-agents. |
-
-> The audit trio is deliberately distinct: **improve** = handoff plans for another agent · **tech-debt-audit** = one broad report file · **improve-codebase-architecture** = architecture-only HTML report.
-
-## Reusable craft patterns (Go / systems)
-
-| Skill | When to use |
-|---|---|
-| [go-cli-conventions](go-cli-conventions/) | Building/reviewing Go 1.24+ CLIs (Cobra, flags, exit behavior, config). |
-| [adapter-pattern](adapter-pattern/) | Interoperate with multiple external APIs/providers without leaking vendor details. |
-| [atomic-file-write](atomic-file-write/) | Replace config/state/user files safely against crashes and partial writes. |
-| [schema-validation](schema-validation/) | Validate config/payloads/manifests with cross-field invariants and clear errors. |
-| [golden-file-testing](golden-file-testing/) | Test generated text/config/serialization whose full shape matters. |
-| [embedded-fixtures](embedded-fixtures/) | Package templates/schemas/fixtures with the binary via Go embed. |
-| [binary-distribution](binary-distribution/) | Release compiled CLIs across OS/arch (archives, checksums, signing, installers). |
-
-## Issue triage & QA
-
-| Skill | When to use |
-|---|---|
-| [qa](qa/) | Conversational bug reporting that files GitHub issues with codebase context. |
-| [triage](triage/) **(manual)** | Move issues through a triage state machine into agent-ready briefs. |
-
-## Private and environment-specific
-
-These skills are kept under `private-skills/` so public-only installations can
-exclude them. Their machine-specific values belong in the ignored
-`.local/skills-environment.yaml` file.
-
-| Skill | When to use |
-|---|---|
-| [[REMOVED-INTERNAL-SKILL]](private-skills/[REMOVED-INTERNAL-SKILL]/) | OVH [REMOVED-INTERNAL-SKILL] CI/CD — authoring/validating `.cds/` YAML. |
-| [[REMOVED-INTERNAL-SKILL]](private-skills/[REMOVED-INTERNAL-SKILL]/) | Fix/update smoke-test patterns for www.[redacted-infrastructure].com. |
-| [[REMOVED-INTERNAL-SKILL]](private-skills/[REMOVED-INTERNAL-SKILL]/) | Manage [REMOVED-INTERNAL-SKILL] issues via a locally configured `[REMOVED-INTERNAL-SKILL]` CLI. |
-| [[REMOVED-INTERNAL-SKILL]](private-skills/[REMOVED-INTERNAL-SKILL]/) | Sync local files to a configured development server via the `rr` function. |
-
-## Meta & tooling
-
-| Skill | When to use |
-|---|---|
-| [writing-skills](writing-skills/) | Create, edit, or verify skills. |
-| [using-superpowers](using-superpowers/) **(manual)** | How to find and use skills at the start of a conversation. |
-| [git-guardrails-claude-code](git-guardrails-claude-code/) | Hooks that block dangerous git commands before they run. |
-| [codex](codex/) | Get a second opinion / verification / deep research via the Codex CLI. |
-| [caveman](caveman/) | Ultra-compressed communication mode (~75% fewer tokens). |
-
----
-
-## Conventions
-
-- **Frontmatter**: unquoted `name` + `description` (quote only when YAML requires it). `description` is third-person and states *when* to use the skill.
-- **Provenance**: attribution (`license`, `metadata.author`) is set only where the upstream author is known (e.g. `improve` — shadcn, MIT). Much of the planning/review/TDD set originates from the [superpowers](https://github.com/obra/superpowers) collection.
-- See [writing-skills](writing-skills/) for the full authoring standard.
+See [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md) for licensing and adapted upstream material.

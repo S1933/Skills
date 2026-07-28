@@ -38,6 +38,7 @@ jobs:
 
       - name: Validate catalogue
         run: |
+          python scripts/generate-catalogue.py --check
           python scripts/generate-dependency-graph.py --check
           python scripts/validate-evals.py
           python scripts/validate-skills.py
