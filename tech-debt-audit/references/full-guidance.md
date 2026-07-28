@@ -7,6 +7,8 @@ disable-model-invocation: true
 
 # Tech Debt Audit
 
+> Historical rationale and examples. The active skill plus the repository reconnaissance, evidence, and execution-safety contracts are canonical when policy text differs.
+
 A Claude Code skill that conducts a deliberate, opinionated audit of an entire codebase and produces `TECH_DEBT_AUDIT.md` with cited findings.
 
 When invoked via `/tech-debt-audit`, follow the protocol below. Everything from here through the `---` divider is the protocol Claude executes. The section after the divider is documentation for humans installing or maintaining this skill.

@@ -17,11 +17,14 @@ flowchart LR
   grill_with_docs["grill-with-docs"]
   grilling["grilling"]
   implement["implement"]
+  improve["improve"]
   improve_codebase_architecture["improve-codebase-architecture"]
   prototype["prototype"]
+  repository_reconnaissance["repository-reconnaissance"]
   requesting_code_review["requesting-code-review"]
   subagent_driven_development["subagent-driven-development"]
   systematic_debugging["systematic-debugging"]
+  tech_debt_audit["tech-debt-audit"]
   test_driven_development["test-driven-development"]
   to_issues["to-issues"]
   to_prd["to-prd"]
@@ -45,8 +48,10 @@ flowchart LR
   implement -->|requires| requesting_code_review
   implement -->|requires| test_driven_development
   implement -->|requires| verification_before_completion
+  improve -->|requires| repository_reconnaissance
   improve_codebase_architecture -->|requires| codebase_design
   improve_codebase_architecture -->|requires| grilling
+  improve_codebase_architecture -->|requires| repository_reconnaissance
   improve_codebase_architecture -. optional .-> domain_modeling
   subagent_driven_development -->|requires| finishing_a_development_branch
   subagent_driven_development -->|requires| requesting_code_review
@@ -57,6 +62,7 @@ flowchart LR
   subagent_driven_development -. optional .-> writing_plans
   systematic_debugging -->|requires| test_driven_development
   systematic_debugging -. optional .-> verification_before_completion
+  tech_debt_audit -->|requires| repository_reconnaissance
   to_issues -. optional .-> triage
   to_prd -. optional .-> triage
   triage -. optional .-> domain_modeling
@@ -98,14 +104,15 @@ flowchart LR
 | grilling | — | — |
 | handoff | — | — |
 | implement | `requesting-code-review`, `test-driven-development`, `verification-before-completion` | — |
-| improve | — | — |
-| improve-codebase-architecture | `codebase-design`, `grilling` | `domain-modeling` |
+| improve | `repository-reconnaissance` | — |
+| improve-codebase-architecture | `codebase-design`, `grilling`, `repository-reconnaissance` | `domain-modeling` |
 | [REMOVED-INTERNAL-SKILL] | — | — |
 | migrate-to-shoehorn | — | — |
 | [REMOVED-INTERNAL-SKILL] | — | — |
 | prototype | — | — |
 | qa | — | — |
 | receiving-code-review | — | — |
+| repository-reconnaissance | — | — |
 | request-refactor-plan | — | — |
 | requesting-code-review | — | — |
 | resolving-merge-conflicts | — | — |
@@ -115,7 +122,7 @@ flowchart LR
 | setup-pre-commit | — | — |
 | subagent-driven-development | `finishing-a-development-branch`, `requesting-code-review`, `test-driven-development`, `using-git-worktrees` | `executing-plans`, `implement`, `writing-plans` |
 | systematic-debugging | `test-driven-development` | `verification-before-completion` |
-| tech-debt-audit | — | — |
+| tech-debt-audit | `repository-reconnaissance` | — |
 | test-driven-development | — | — |
 | to-issues | — | `triage` |
 | to-prd | — | `triage` |

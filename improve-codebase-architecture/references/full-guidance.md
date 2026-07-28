@@ -7,6 +7,8 @@ disable-model-invocation: true
 
 # Improve Codebase Architecture
 
+> Historical rationale and examples. The active skill plus the repository reconnaissance, evidence, and execution-safety contracts are canonical when policy text differs.
+
 Surface architectural friction and propose **deepening opportunities** — refactors that turn shallow modules into deep ones. The aim is testability and AI-navigability.
 
 This command is _informed_ by the project's domain model and built on a shared design vocabulary:
