@@ -25,3 +25,10 @@ observations:
 ```
 
 Score an observed run with `python3 scripts/score-evals.py <results.yaml>`. It reports trigger precision/recall, compliance, collision rate, average context tokens, and repeated-run stability. Catalogue CI validates fixture coverage; model-facing runners remain client adapters so this repository does not hardcode one model or API.
+
+# Bootstrap safety
+
+Create only missing suites with `python3 scripts/bootstrap-evals.py
+--all-missing`, or target one skill with `--skill <name>`. Existing files are
+never replaced unless `--force` is supplied explicitly. The command reports
+every created, skipped, or replaced file.

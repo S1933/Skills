@@ -21,13 +21,28 @@ force flags are also present, because Git does not mutate state in dry-run
 mode.
 
 The hook recognises absolute Git paths, `command git`, `env ... git`, Git
-global options such as `-C`, and commands after shell separators. Blocked and
+global options such as `-C`, commands after shell separators and command
+substitutions, executable Git aliases declared with `git -c alias.…=!…`, and
+recursive `bash`, `dash`, `sh`, or `zsh -c` and `eval` wrappers. Blocked and
 invalid-input decisions exit with code `2` and emit one of these stable codes:
 
 - `GIT_GUARDRAIL_BLOCKED`
 - `GIT_GUARDRAIL_INPUT_ERROR`
 
 When blocked, Claude sees a message telling it that it does not have authority to access these commands.
+
+## Threat model and limits
+
+This is a fail-closed classifier for the documented shell grammar, not an OS
+sandbox. Malformed commands, missing wrapper payloads, and excessive wrapper
+depth are rejected as input errors. Direct Git commands and the supported
+wrappers above are inspected recursively.
+
+Programs that can execute arbitrary code through their own language or input
+(for example Python, Node.js, or a downloaded binary) are outside the parser's
+threat model. Prevent those bypasses with Claude Code tool permissions and an
+execution sandbox; do not present this hook as protection from arbitrary code
+execution.
 
 ## Steps
 
@@ -107,5 +122,6 @@ Run the bundled fixture suite:
 git-guardrails-claude-code/tests/test-guardrail.sh
 ```
 
-It covers allowed commands, blocked commands, malformed input, absent command
-fields, and an environment without `jq`.
+It covers allowed commands, direct and recursively wrapped blocked commands,
+executable aliases, malformed input, absent command fields, and an environment
+without `jq`. The Python unit tests exercise the classifier boundary directly.

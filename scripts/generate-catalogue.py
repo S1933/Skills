@@ -13,6 +13,10 @@ import yaml
 NOTICE = "<!-- Generated from skills-manifest.yaml; do not edit manually. -->"
 
 
+def markdown_cell(value: object) -> str:
+    return str(value).replace("\\", "\\\\").replace("|", "\\|").replace("\n", "<br>")
+
+
 def entries(manifest: dict[str, object], visibility: str) -> list[dict[str, object]]:
     return sorted((entry for entry in manifest["skills"] if entry.get("visibility") == visibility), key=lambda entry: entry["name"])
 
@@ -22,7 +26,11 @@ def render_table(items: list[dict[str, object]]) -> list[str]:
     for entry in items:
         path = entry["path"]
         clients = ", ".join(entry.get("clients", []))
-        lines.append(f"| [`{entry['name']}`]({path}/) | {entry['invocation']} | {clients} | {entry['description']} |")
+        lines.append(
+            f"| [`{markdown_cell(entry['name'])}`]({path}/) | "
+            f"{markdown_cell(entry['invocation'])} | {markdown_cell(clients)} | "
+            f"{markdown_cell(entry['description'])} |"
+        )
     return lines
 
 
@@ -33,7 +41,7 @@ def render_readme(manifest: dict[str, object]) -> str:
     lines.extend(render_table(public))
     lines.extend(["", f"## Private/environment-specific skills ({len(private)})", "", "Private skills remain in the repository for local use but are excluded from public-only installation guidance and may require `.local/skills-environment.yaml`.", ""])
     lines.extend(render_table(private))
-    lines.extend(["", "## Validate", "", "```bash", "python3 -m pip install -r requirements-dev.txt", "python3 -m unittest discover --start-directory tests --pattern 'test_*.py'", "python3 scripts/generate-catalogue.py --check", "python3 scripts/generate-dependency-graph.py --check", "python3 scripts/validate-evals.py", "python3 scripts/validate-skills.py", "```", "", "See [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md) for licensing and adapted upstream material.", ""])
+    lines.extend(["", "## Validate", "", "```bash", "python3 -m pip install -r requirements-dev.txt", "python3 -m unittest discover --start-directory tests --pattern 'test_*.py'", "python3 -m unittest discover --start-directory git-guardrails-claude-code/tests --pattern 'test_*.py'", "git-guardrails-claude-code/tests/test-guardrail.sh", "python3 scripts/generate-catalogue.py --check", "python3 scripts/generate-dependency-graph.py --check", "python3 scripts/validate-evals.py", "python3 scripts/validate-skills.py", "git ls-files '*.sh' '*.zsh' | xargs shellcheck", "```", "", "See [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md) for licensing and adapted upstream material.", ""])
     return "\n".join(lines)
 
 
@@ -61,15 +69,44 @@ def update(path: Path, content: str, check: bool) -> bool:
     return True
 
 
+def load_manifest(path: Path) -> dict[str, object]:
+    manifest = yaml.safe_load(path.read_text(encoding="utf-8"))
+    if not isinstance(manifest, dict) or not isinstance(manifest.get("skills"), list):
+        raise ValueError("skills must be a list")
+    for entry in manifest["skills"]:
+        if not isinstance(entry, dict) or any(
+            not isinstance(entry.get(field), str)
+            for field in ("name", "path", "visibility", "invocation", "description")
+        ):
+            raise ValueError("each skill needs string name, path, visibility, invocation, and description")
+        if not isinstance(entry.get("approximate_word_count"), int) or isinstance(entry.get("approximate_word_count"), bool):
+            raise ValueError(f"{entry['name']}.approximate_word_count must be an integer")
+        for field in ("clients", "requires_skills", "optional_skills", "requires_commands"):
+            value = entry.get(field, [])
+            if not isinstance(value, list) or any(not isinstance(item, str) for item in value):
+                raise ValueError(f"{entry['name']}.{field} must be a list of strings")
+    return manifest
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args(argv)
     root = args.root.resolve()
-    manifest = yaml.safe_load((root / "skills-manifest.yaml").read_text(encoding="utf-8"))
-    ok = update(root / "README.md", render_readme(manifest), args.check)
-    ok = update(root / "docs/generated/catalogue.md", render_catalogue(manifest), args.check) and ok
+    try:
+        manifest = load_manifest(root / "skills-manifest.yaml")
+    except (OSError, ValueError, yaml.YAMLError) as error:
+        print(f"invalid manifest: {str(error).splitlines()[0]}", file=sys.stderr)
+        return 2
+    try:
+        readme_content = render_readme(manifest)
+        catalogue_content = render_catalogue(manifest)
+    except (KeyError, TypeError, ValueError) as error:
+        print(f"invalid manifest: cannot render: {error}", file=sys.stderr)
+        return 2
+    ok = update(root / "README.md", readme_content, args.check)
+    ok = update(root / "docs/generated/catalogue.md", catalogue_content, args.check) and ok
     return 0 if ok else 1
 
 

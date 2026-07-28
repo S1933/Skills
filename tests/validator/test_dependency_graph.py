@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 from pathlib import Path
+import tempfile
 import unittest
 
 import yaml
@@ -51,6 +52,21 @@ class DependencyGraphTests(unittest.TestCase):
         self.assertIn('zeta -->|requires| beta', output)
         self.assertIn('zeta -. optional .-> alpha', output)
         self.assertLess(output.index("| alpha |"), output.index("| zeta |"))
+
+    def test_invalid_manifest_fails_cleanly(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "skills-manifest.yaml").write_text("skills: invalid\n", encoding="utf-8")
+            self.assertEqual(2, self.generator.main(["--root", str(root), "--check"]))
+
+    def test_invalid_dependency_collection_fails_cleanly(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "skills-manifest.yaml").write_text(
+                yaml.safe_dump({"skills": [{"name": "sample", "requires_skills": 3}]}),
+                encoding="utf-8",
+            )
+            self.assertEqual(2, self.generator.main(["--root", str(root), "--check"]))
 
 
 if __name__ == "__main__":

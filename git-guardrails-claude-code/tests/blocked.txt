@@ -14,3 +14,23 @@ env GIT_DIR=.git git branch -D feature
 git branch --delete --force feature
 /usr/bin/env GIT_WORK_TREE=. git restore .
 git checkout -- .
+
+# Shell wrappers and executable aliases are inspected recursively.
+bash -c 'git push origin main'
+sh -c 'git reset --hard'
+eval 'git clean -fd'
+bash -c "sh -c 'git push origin main'"
+env bash -c 'git push origin main'
+command sh -c 'git reset --hard'
+bash -c -- 'git push origin main'
+eval -- 'git clean -fd'
+env -S "bash -c 'git push origin main'"
+env -S"bash -c 'git push origin main'"
+env --split-string="bash -c 'git push origin main'"
+git -c alias.publish='!git push origin main' publish
+git -c Alias.publish='!git push origin main' publish
+git -c alias.Publish='!git push origin main' publish
+git -c alias.publish='!git status' -c alias.publish='!git push origin main' publish
+git -c alias.publish='push origin main' publish
+ALIAS_BODY='!git push origin main' git --config-env=alias.publish=ALIAS_BODY publish
+echo $(git push origin main)

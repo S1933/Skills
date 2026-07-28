@@ -91,6 +91,52 @@ class ValidatorTests(unittest.TestCase):
         diagnostics = self.validate(entries)
         self.assertFalse([item for item in diagnostics if item.severity == "error"])
 
+    def test_manifest_rejects_unsafe_path_and_unknown_enums(self) -> None:
+        entry = self.add_skill("valid-skill")
+        entry["path"] = "../outside"
+        entry["visibility"] = "secret"
+        entry["invocation"] = "sometimes"
+        entry["clients"] = ["unknown-client"]
+        self.assertIn("E042_MANIFEST_SCHEMA", self.codes([entry]))
+
+    def test_manifest_rejects_wrong_collection_types(self) -> None:
+        entry = self.add_skill("valid-skill")
+        entry["clients"] = "agent-skills"
+        entry["supporting_files"] = "valid-skill/SKILL.md"
+        self.assertIn("E042_MANIFEST_SCHEMA", self.codes([entry]))
+
+    def test_manifest_entry_must_be_a_mapping(self) -> None:
+        (self.root / "skills-manifest.yaml").write_text(
+            yaml.safe_dump({"skills": ["invalid"]}), encoding="utf-8"
+        )
+        codes = {item.code for item in self.validator.validate_catalogue(self.root)}
+        self.assertIn("E042_MANIFEST_SCHEMA", codes)
+
+    def test_supporting_file_must_belong_to_skill_or_shared_area(self) -> None:
+        entry = self.add_skill("valid-skill")
+        unrelated = self.root / "unrelated.txt"
+        unrelated.write_text("unrelated", encoding="utf-8")
+        entry["supporting_files"] = ["unrelated.txt"]
+        self.assertIn("E043_PATH_OUTSIDE_SKILL", self.codes([entry]))
+
+    def test_any_symlink_under_skill_cannot_escape_repository(self) -> None:
+        entry = self.add_skill("valid-skill")
+        with tempfile.TemporaryDirectory() as external:
+            target = Path(external) / "outside.txt"
+            target.write_text("outside", encoding="utf-8")
+            (self.root / "valid-skill" / "outside-link.txt").symlink_to(target)
+            self.assertIn("E027_SYMLINK_OUTSIDE", self.codes([entry]))
+
+    def test_absolute_supporting_symlink_is_rejected_without_crashing(self) -> None:
+        entry = self.add_skill("valid-skill")
+        with tempfile.TemporaryDirectory() as external:
+            target = Path(external) / "outside.txt"
+            target.write_text("outside", encoding="utf-8")
+            link = Path(external) / "link.txt"
+            link.symlink_to(target)
+            entry["supporting_files"] = [str(link)]
+            self.assertIn("E042_MANIFEST_SCHEMA", self.codes([entry]))
+
     def test_missing_skill_file_has_stable_identifier(self) -> None:
         entry = self.add_skill("valid-skill")
         (self.root / "valid-skill" / "SKILL.md").unlink()

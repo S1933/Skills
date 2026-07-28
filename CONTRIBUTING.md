@@ -29,6 +29,7 @@ Public content must not contain personal home paths, internal hostnames, private
 ```bash
 python3 -m unittest discover --start-directory tests --pattern 'test_*.py'
 python3 -m unittest codex/tests/test_skill_policy.py
+python3 -m unittest discover --start-directory git-guardrails-claude-code/tests --pattern 'test_*.py'
 git-guardrails-claude-code/tests/test-guardrail.sh
 python3 scripts/generate-catalogue.py
 python3 scripts/generate-dependency-graph.py
@@ -36,6 +37,7 @@ python3 scripts/generate-catalogue.py --check
 python3 scripts/generate-dependency-graph.py --check
 python3 scripts/validate-evals.py
 python3 scripts/validate-skills.py
+git ls-files '*.sh' '*.zsh' | xargs shellcheck
 ```
 
 Review every generated diff. Do not update generated files merely to hide a manifest mistake. Pull requests should remain category-focused and include the observed RED/GREEN evidence.

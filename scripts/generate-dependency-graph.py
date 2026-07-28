@@ -103,23 +103,50 @@ def update_file(path: Path, content: str, check: bool) -> bool:
     return True
 
 
+def load_manifest(path: Path) -> dict[str, object]:
+    manifest = yaml.safe_load(path.read_text(encoding="utf-8"))
+    if not isinstance(manifest, dict) or not isinstance(manifest.get("skills"), list):
+        raise ValueError("skills must be a list")
+    if any(
+        not isinstance(entry, dict) or not isinstance(entry.get("name"), str)
+        for entry in manifest["skills"]
+    ):
+        raise ValueError("each skill needs a string name")
+    for entry in manifest["skills"]:
+        for field in ("requires_skills", "optional_skills"):
+            value = entry.get(field, [])
+            if not isinstance(value, list) or any(not isinstance(item, str) for item in value):
+                raise ValueError(f"{entry['name']}.{field} must be a list of strings")
+    return manifest
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--check", action="store_true")
     arguments = parser.parse_args(argv)
     root = arguments.root.resolve()
-    manifest = yaml.safe_load((root / "skills-manifest.yaml").read_text(encoding="utf-8"))
+    try:
+        manifest = load_manifest(root / "skills-manifest.yaml")
+    except (OSError, ValueError, yaml.YAMLError) as error:
+        print(f"invalid manifest: {str(error).splitlines()[0]}", file=sys.stderr)
+        return 2
+    try:
+        graph_content = render_dependency_graph(manifest)
+        pointer_content = render_legacy_graph_pointer()
+    except (KeyError, TypeError, ValueError) as error:
+        print(f"invalid manifest: cannot render: {error}", file=sys.stderr)
+        return 2
     generated = root / "docs" / "generated"
     results = [
         update_file(
             generated / "dependency-graph.md",
-            render_dependency_graph(manifest),
+            graph_content,
             arguments.check,
         ),
         update_file(
             generated / "skill-dependency-graph.md",
-            render_legacy_graph_pointer(),
+            pointer_content,
             arguments.check,
         ),
     ]

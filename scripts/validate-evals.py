@@ -40,10 +40,53 @@ def load_cases(path: Path, diagnostics: list[Diagnostic]) -> list[dict[str, obje
 def validate_evals(root: Path | str) -> list[Diagnostic]:
     root = Path(root)
     diagnostics: list[Diagnostic] = []
-    manifest = yaml.safe_load((root / "skills-manifest.yaml").read_text(encoding="utf-8"))
+    manifest_path = root / "skills-manifest.yaml"
+    try:
+        manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError) as error:
+        return [Diagnostic("E109_EVAL_MANIFEST", manifest_path.as_posix(), str(error).splitlines()[0])]
+    if not isinstance(manifest, dict) or not isinstance(manifest.get("skills"), list):
+        return [Diagnostic("E109_EVAL_MANIFEST", manifest_path.as_posix(), "manifest skills must be a list")]
+    manifest_entries = [entry for entry in manifest["skills"] if isinstance(entry, dict)]
+    known_names = {
+        entry["name"] for entry in manifest_entries if isinstance(entry.get("name"), str)
+    }
+    for entry in manifest_entries:
+        if entry.get("invocation") == "automatic" and not isinstance(entry.get("name"), str):
+            diagnostics.append(Diagnostic("E109_EVAL_MANIFEST", manifest_path.as_posix(), "automatic skill name must be a string"))
+    evals_root = root / "evals"
+    if evals_root.exists():
+        for suite_directory in sorted(path for path in evals_root.iterdir() if path.is_dir()):
+            if suite_directory.name not in known_names:
+                diagnostics.append(Diagnostic("E111_EVAL_SUITE_ORPHAN", suite_directory.as_posix(), "evaluation directory has no manifest skill"))
+            trigger = suite_directory / "trigger.yaml"
+            if trigger.exists():
+                try:
+                    document = yaml.safe_load(trigger.read_text(encoding="utf-8"))
+                except (OSError, yaml.YAMLError):
+                    document = None
+                if isinstance(document, dict) and document.get("skill") != suite_directory.name:
+                    diagnostics.append(Diagnostic("E110_EVAL_SKILL_MISMATCH", trigger.as_posix(), "suite skill must match its directory"))
+            seen_cases: dict[tuple[str, str], Path] = {}
+            for suite_path in sorted(suite_directory.glob("*.yaml")):
+                try:
+                    suite_document = yaml.safe_load(suite_path.read_text(encoding="utf-8"))
+                except (OSError, yaml.YAMLError):
+                    continue
+                if not isinstance(suite_document, dict) or not isinstance(suite_document.get("cases"), list):
+                    continue
+                for case in suite_document["cases"]:
+                    if not isinstance(case, dict) or not isinstance(case.get("name"), str) or not isinstance(case.get("prompt"), str):
+                        continue
+                    key = (case["name"], case["prompt"])
+                    previous = seen_cases.get(key)
+                    if previous is not None and previous != suite_path:
+                        diagnostics.append(Diagnostic("E112_EVAL_CASE_DUPLICATE", suite_path.as_posix(), f"case duplicates {previous.name}: {case['name']}"))
+                    else:
+                        seen_cases[key] = suite_path
     automatic = sorted(
-        (entry for entry in manifest.get("skills", [])
-        if isinstance(entry, dict) and entry.get("invocation") == "automatic"
+        (entry for entry in manifest_entries
+        if entry.get("invocation") == "automatic" and isinstance(entry.get("name"), str)
         ), key=lambda entry: entry["name"]
     )
     for entry in automatic:
@@ -52,8 +95,11 @@ def validate_evals(root: Path | str) -> list[Diagnostic]:
         if not trigger_path.exists():
             diagnostics.append(Diagnostic("E101_TRIGGER_SUITE_MISSING", trigger_path.as_posix(), "automatic skill needs trigger cases"))
             continue
-        trigger_document = yaml.safe_load(trigger_path.read_text(encoding="utf-8"))
-        if not isinstance(trigger_document, dict) or trigger_document.get("description") != entry.get("description"):
+        try:
+            trigger_document = yaml.safe_load(trigger_path.read_text(encoding="utf-8"))
+        except (OSError, yaml.YAMLError):
+            trigger_document = None
+        if isinstance(trigger_document, dict) and trigger_document.get("description") != entry.get("description"):
             diagnostics.append(Diagnostic("E108_TRIGGER_DESCRIPTION_STALE", trigger_path.as_posix(), "suite description must match the manifest"))
         cases = load_cases(trigger_path, diagnostics)
         positives = negatives = 0
