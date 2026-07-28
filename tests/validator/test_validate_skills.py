@@ -47,15 +47,16 @@ class ValidatorTests(unittest.TestCase):
         clients: list[str] | None = None,
         invocation: str = "automatic",
         dependency_notes: dict[str, str] | None = None,
+        word_budget: int | None = None,
     ) -> dict[str, object]:
         skill_path = path or fixture
         destination = self.root / skill_path
         destination.mkdir(parents=True)
         shutil.copy(FIXTURES / fixture / "SKILL.md", destination / "SKILL.md")
-        return {
+        entry = {
             "name": name or skill_path,
             "path": skill_path,
-            "description": description or "Use when exercising a validator fixture.",
+            "description": description or "Use when validating a minimal well-formed skill fixture.",
             "invocation": invocation,
             "visibility": visibility,
             "clients": clients or ["agent-skills"],
@@ -66,7 +67,13 @@ class ValidatorTests(unittest.TestCase):
             "requires_commands": [],
             "aliases": [],
             "dependency_notes": dependency_notes or {},
+            "approximate_word_count": len(
+                (destination / "SKILL.md").read_text(encoding="utf-8").split()
+            ),
         }
+        if word_budget is not None:
+            entry["word_budget"] = word_budget
+        return entry
 
     def validate(self, entries: list[dict[str, object]]):
         manifest = {"schema_version": 1, "skills": entries}
@@ -197,6 +204,31 @@ class ValidatorTests(unittest.TestCase):
         )
         skill.write_text(text, encoding="utf-8")
         self.assertIn("E011_DESCRIPTION_LENGTH", self.codes([entry]))
+
+    def test_manifest_description_must_match_frontmatter(self) -> None:
+        entry = self.add_skill(
+            "valid-skill",
+            description="Use when this stale manifest description no longer matches.",
+        )
+        self.assertIn("E036_MANIFEST_DESCRIPTION_MISMATCH", self.codes([entry]))
+
+    def test_manifest_word_count_cannot_be_stale(self) -> None:
+        entry = self.add_skill("valid-skill")
+        entry["approximate_word_count"] = 9999
+        self.assertIn("E037_MANIFEST_WORD_COUNT_STALE", self.codes([entry]))
+
+    def test_declared_main_file_word_budget_is_enforced(self) -> None:
+        entry = self.add_skill("valid-skill", word_budget=10)
+        self.assertIn("E035_WORD_BUDGET", self.codes([entry]))
+
+    def test_default_main_file_word_budget_is_enforced(self) -> None:
+        entry = self.add_skill("valid-skill")
+        skill = self.root / "valid-skill" / "SKILL.md"
+        skill.write_text(
+            skill.read_text(encoding="utf-8") + "\n" + ("word " * 801),
+            encoding="utf-8",
+        )
+        self.assertIn("E035_WORD_BUDGET", self.codes([entry]))
 
     def test_duplicate_skill_name_has_stable_identifier(self) -> None:
         first = self.add_skill("valid-skill", path="first", name="valid-skill")

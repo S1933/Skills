@@ -78,5 +78,16 @@ and declare commands, tools, or client features in the manifest.
 - Declare supporting files and cross-skill references in the manifest.
 - Do not publish unresolved `TBD` or `TODO` placeholders.
 - Put heavy references in supporting files and link them from `SKILL.md`.
-- Treat 1,200 words in a main skill as a migration warning until the progressive
-  disclosure phase is complete.
+
+Main `SKILL.md` files have a hard maximum of 800 words. Lower targets are:
+
+| Skill type | Target |
+|---|---:|
+| Startup/meta | under 200 words |
+| Thin wrapper | under 100 words |
+| Technique or pattern | under 500 words |
+| Complex workflow | under 800 words |
+
+Declare a lower `word_budget` in `skills-manifest.yaml` after refactoring. Move
+background, long examples, maintenance notes, and heavy references into linked
+files rather than weakening behaviour-critical rules.
