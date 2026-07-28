@@ -81,14 +81,18 @@ A personal collection of [Agent Skills](https://agentskills.io/specification) fo
 | [qa](qa/) | Conversational bug reporting that files GitHub issues with codebase context. |
 | [triage](triage/) **(manual)** | Move issues through a triage state machine into agent-ready briefs. |
 
-## Environment-specific ([redacted-infrastructure] / personal)
+## Private and environment-specific
+
+These skills are kept under `private-skills/` so public-only installations can
+exclude them. Their machine-specific values belong in the ignored
+`.local/skills-environment.yaml` file.
 
 | Skill | When to use |
 |---|---|
-| [[REMOVED-INTERNAL-SKILL]]([REMOVED-INTERNAL-SKILL]/) | OVH [REMOVED-INTERNAL-SKILL] CI/CD — authoring/validating `.cds/` YAML. |
-| [[REMOVED-INTERNAL-SKILL]]([REMOVED-INTERNAL-SKILL]/) | Fix/update smoke-test patterns for www.[redacted-infrastructure].com. |
-| [[REMOVED-INTERNAL-SKILL]]([REMOVED-INTERNAL-SKILL]/) | Manage [REMOVED-INTERNAL-SKILL] issues via the personal `[REMOVED-INTERNAL-SKILL]` CLI. |
-| [[REMOVED-INTERNAL-SKILL]]([REMOVED-INTERNAL-SKILL]/) | Sync local files to the [redacted-infrastructure]-docker dev server via the `rr` function. |
+| [[REMOVED-INTERNAL-SKILL]](private-skills/[REMOVED-INTERNAL-SKILL]/) | OVH [REMOVED-INTERNAL-SKILL] CI/CD — authoring/validating `.cds/` YAML. |
+| [[REMOVED-INTERNAL-SKILL]](private-skills/[REMOVED-INTERNAL-SKILL]/) | Fix/update smoke-test patterns for www.[redacted-infrastructure].com. |
+| [[REMOVED-INTERNAL-SKILL]](private-skills/[REMOVED-INTERNAL-SKILL]/) | Manage [REMOVED-INTERNAL-SKILL] issues via a locally configured `[REMOVED-INTERNAL-SKILL]` CLI. |
+| [[REMOVED-INTERNAL-SKILL]](private-skills/[REMOVED-INTERNAL-SKILL]/) | Sync local files to a configured development server via the `rr` function. |
 
 ## Meta & tooling
 

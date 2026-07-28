@@ -1,0 +1,16 @@
+# Any real push is blocked, including prefixed and force variants.
+git push origin main
+git push --force-with-lease
+git push -f origin main
+git push origin +main:main
+git -C /tmp/repo push
+git status && git push origin main
+
+# Destructive local operations are blocked through common wrappers.
+/usr/bin/git reset --hard
+command git clean -fd
+git clean -xdf
+env GIT_DIR=.git git branch -D feature
+git branch --delete --force feature
+/usr/bin/env GIT_WORK_TREE=. git restore .
+git checkout -- .

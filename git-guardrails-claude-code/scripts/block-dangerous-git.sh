@@ -1,25 +1,17 @@
 #!/bin/bash
+set -euo pipefail
 
-INPUT=$(cat)
-COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command')
+readonly script_dir="${BASH_SOURCE[0]%/*}"
+readonly classifier="${script_dir}/classify-git-command.py"
 
-DANGEROUS_PATTERNS=(
-  "git push"
-  "git reset --hard"
-  "git clean -fd"
-  "git clean -f"
-  "git branch -D"
-  "git checkout \."
-  "git restore \."
-  "push --force"
-  "reset --hard"
-)
+if ! command -v python3 >/dev/null 2>&1; then
+  printf '%s\n' 'GIT_GUARDRAIL_INPUT_ERROR: python3-unavailable' >&2
+  exit 2
+fi
 
-for pattern in "${DANGEROUS_PATTERNS[@]}"; do
-  if echo "$COMMAND" | grep -qE "$pattern"; then
-    echo "BLOCKED: '$COMMAND' matches dangerous pattern '$pattern'. The user has prevented you from doing this." >&2
-    exit 2
-  fi
-done
+if [[ ! -r "$classifier" ]]; then
+  printf '%s\n' 'GIT_GUARDRAIL_INPUT_ERROR: classifier-unavailable' >&2
+  exit 2
+fi
 
-exit 0
+exec python3 "$classifier"

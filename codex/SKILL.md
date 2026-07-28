@@ -40,46 +40,77 @@ Serve as Codex's technical consultant for:
 
 ## Codex CLI Usage
 
-### Full Command Pattern
+### Read-only default
+
+Second-opinion work is research unless the user explicitly requests a
+repository change. Run research, analysis, verification, and code review in
+the read-only sandbox:
+
 ```bash
-codex exec --dangerously-bypass-approvals-and-sandbox "Your query here"
+codex exec --sandbox read-only --ephemeral "<prompt>"
 ```
 
-### Implementation Details
-- **Subcommand**: `exec` is REQUIRED for non-interactive/automated use
-- **Sandbox bypass**: `--dangerously-bypass-approvals-and-sandbox` enables full access
-- **Working directory**: Current project root
+`--ephemeral` avoids persisting the session. Omit it only when the user needs
+the session to be resumed later.
 
-### Available Options (all optional)
-- `--model <model>` or `-m <model>`: Specify model (e.g., `gpt-5.4`, `gpt-5.3-codex`, `gpt-5.2-codex`, `gpt-5.1-codex-mini`)
-- `-c model_reasoning_effort=<level>`: Set reasoning effort (`low`, `medium`, `high`, `xhigh`) — use config override, NOT `--reasoning-effort` (flag doesn't exist)
-- `--full-auto`: Enable full auto mode
+Do not modify files, install dependencies, create commits, or perform other
+mutating actions during second-opinion research. State the read-only
+constraint in the prompt when the task could be mistaken for implementation.
 
-### Model Selection
-- **`gpt-5.4`** — newest frontier agentic coding model; 272k context, text+image input, supports reasoning levels low/medium/high/xhigh. Use for the most capable analysis.
-- **`gpt-5.3-codex-spark`** (default in config) — ultra-fast, 1000+ tok/s on Cerebras hardware; text-only, 128k context. Best for most queries where speed matters.
-- **`gpt-5.3-codex`** — full 5.3 model, slower but capable for deep architecture/novel questions; 272k context
-- Available alternatives: `gpt-5.2-codex`, `gpt-5.1-codex-max`, `gpt-5.1-codex-mini`
+### Write access
 
-**When to override away from Spark**: complex multi-file architecture analysis, novel algorithmic problems, or when reasoning depth matters more than speed. Use `-m gpt-5.4 -c model_reasoning_effort=xhigh` for maximum capability, or `-m gpt-5.3-codex -c model_reasoning_effort=xhigh` as an alternative.
+Write access requires an explicit user request for Codex to modify the
+repository. When that request exists, use the workspace-write sandbox:
 
-### Performance Expectations
-**IMPORTANT**: Codex is designed for thoroughness over speed:
-- **Typical response time**: 30 seconds to 2 minutes for most queries
-- **Response variance**: Simple queries ~30s, complex analysis 1-2+ minutes
-- **Best practice**: Start Codex queries early and work on other tasks while waiting
+```bash
+codex exec --sandbox workspace-write "<prompt>"
+```
+
+Do not infer permission to write from a request for review, analysis,
+verification, research, speed, or thoroughness.
+
+## Elevated execution
+
+Never disable sandboxing or approval checks automatically. Proceed only when
+all three conditions are met:
+
+1. The user explicitly asks for unrestricted execution.
+2. You present the exact command and risks before it runs.
+3. The user confirms immediately before execution.
+
+This gate applies to both `--sandbox danger-full-access`, which removes the
+filesystem sandbox, and the approval-and-sandbox bypass below. Only after
+confirmation may the exact command use either option:
+
+```bash
+codex exec --dangerously-bypass-approvals-and-sandbox "<prompt>"
+```
+
+Explain that this skips confirmation prompts and removes the Codex sandbox,
+allowing generated commands to modify or delete data outside the repository.
+Vague permission such as “use whatever access you need” is not confirmation.
+
+### Current CLI options
+
+Run `codex exec --help` and treat its output as the source of truth for
+supported flags, sandbox modes, model selection, and configuration overrides.
+Do not copy a static model catalogue or context-size table into this skill.
+Use the configured default model unless the user requests an override or the
+task has a demonstrated requirement the default cannot meet.
 
 ### Prompt Template
 ```bash
-codex exec --dangerously-bypass-approvals-and-sandbox "Context: [Project name] ([tech stack]). Relevant docs: @/AGENTS.md plus package-level AGENTS.md files. Task: <short task>. Repository evidence: <paths/lines from rg/git>. Constraints: [constraints]. Please return: (1) decisive answer; (2) supporting citations (paths:line); (3) risks/edge cases; (4) recommended next steps/tests; (5) open questions. List any uncertainties explicitly."
+codex exec --sandbox read-only --ephemeral "Context: [Project name] ([tech stack]). Relevant docs: @/AGENTS.md plus package-level AGENTS.md files. Task: <short task>. Constraint: research only; do not modify the repository. Repository evidence: <paths/lines from rg/git>. Please return: (1) decisive answer; (2) supporting citations (paths:line); (3) risks/edge cases; (4) recommended next steps/tests; (5) open questions. List any uncertainties explicitly."
 ```
 
 ### Context Sharing Pattern
 Always provide project context:
 ```bash
-codex exec --dangerously-bypass-approvals-and-sandbox "Context: This is the [Project] monorepo, a [description] using [tech stack].
+codex exec --sandbox read-only --ephemeral "Context: This is the [Project] monorepo, a [description] using [tech stack].
 
 Key documentation is at @/AGENTS.md
+
+Constraint: Research only. Do not modify the repository.
 
 Note: Similar to how Codex looks for agent.md files, this project uses AGENTS.md files in various directories:
 - Root AGENTS.md: Overall project guidance
@@ -92,8 +123,8 @@ Note: Similar to how Codex looks for agent.md files, this project uses AGENTS.md
 
 1. **Start Codex early**, then continue local analysis in parallel
 2. If timeout, retry with narrower scope and note the partial run
-3. For quick fact checks, use the default model
-4. Use `-m gpt-5.4 -c model_reasoning_effort=xhigh` for architecture/novel questions
+3. Use the configured default model unless the user requests otherwise
+4. Check `codex exec --help` before relying on optional flags
 5. Always quote path segments with metacharacters in shell examples
 
 ## Search-First Checklist
