@@ -12,7 +12,7 @@ A validated catalogue of portable and client-specific Agent Skills. The reposito
 - [Evaluation format](docs/evaluations.md)
 - [Provenance](NOTICE.md)
 
-## Public skills (48)
+## Public skills (49)
 
 | Skill | Invocation | Clients | Description |
 |---|---|---|---|
@@ -49,6 +49,7 @@ A validated catalogue of portable and client-specific Agent Skills. The reposito
 | [`requesting-code-review`](requesting-code-review/) | automatic | claude-code, codex, opencode | Use when implementation work needs an independent code review before completion, integration, or merge. |
 | [`resolving-merge-conflicts`](resolving-merge-conflicts/) | automatic | agent-skills | Use when you need to resolve an in-progress git merge/rebase conflict. |
 | [`review-scope`](review-scope/) | automatic | agent-skills | Use when beginning a code review that must include committed, staged, unstaged, and relevant untracked changes against the correct base. |
+| [`[REMOVED-INTERNAL-SKILL]`]([REMOVED-INTERNAL-SKILL]/) | automatic | agent-skills | Use when integrating the Scaleflex, Filerobot, or Cloudimage API — searching DAM assets by metadata, uploading files, running Visual AI models, or invalidating CDN cache. |
 | [`schema-validation`](schema-validation/) | automatic | agent-skills | Use when defining or reviewing validation for configuration files, API payloads, manifests, serialized models, cross-field invariants, or human-readable validation errors. |
 | [`setup-pre-commit`](setup-pre-commit/) | automatic | agent-skills | Use when adding or repairing Husky pre-commit automation for formatting, type checking, and tests in a JavaScript or TypeScript repository. |
 | [`subagent-driven-development`](subagent-driven-development/) | automatic | claude-code, codex, opencode | Use when executing implementation plans with independent tasks in the current session |

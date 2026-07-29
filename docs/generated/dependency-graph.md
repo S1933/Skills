@@ -118,6 +118,7 @@ flowchart LR
 | resolving-merge-conflicts | — | — |
 | review-scope | — | — |
 | [REMOVED-INTERNAL-SKILL] | — | — |
+| [REMOVED-INTERNAL-SKILL] | — | — |
 | schema-validation | — | — |
 | setup-pre-commit | — | — |
 | subagent-driven-development | `finishing-a-development-branch`, `requesting-code-review`, `test-driven-development`, `using-git-worktrees` | `executing-plans`, `implement`, `writing-plans` |
