@@ -23,9 +23,7 @@ class SharedContractTests(unittest.TestCase):
             "../references/execution-safety.md",
         )
         for skill_name in (
-            "improve",
-            "tech-debt-audit",
-            "improve-codebase-architecture",
+            "repository-reconnaissance",
         ):
             text = (ROOT / skill_name / "SKILL.md").read_text(encoding="utf-8")
             for marker in required_markers:

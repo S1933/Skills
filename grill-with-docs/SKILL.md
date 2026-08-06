@@ -1,7 +1,0 @@
----
-name: grill-with-docs
-description: Use when explicitly invoking /grill-with-docs to stress-test a plan while recording ADRs and a domain glossary.
-disable-model-invocation: true
----
-
-Run a `grilling` skill session, using the `domain-modeling` skill.

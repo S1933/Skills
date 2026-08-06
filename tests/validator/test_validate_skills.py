@@ -169,9 +169,16 @@ class ValidatorTests(unittest.TestCase):
         self.assertNotIn("E013_BROKEN_LINK", self.codes([entry]))
 
     def test_deliberately_invalid_flowchart_example_is_not_compiled_as_dot(self) -> None:
-        path = ROOT / "writing-skills" / "references" / "full-guidance.md"
+        source = self.root / "guide.md"
+        source.write_text(
+            "# Flowchart reference\n\n"
+            "The anti-pattern lanes are intentionally not DOT fences so graphviz "
+            "compilation is skipped:\n\n"
+            "```md\nstep1 [label=\"start\"]\nstep1 -> step2\n```\n",
+            encoding="utf-8",
+        )
         diagnostics = []
-        blocks = self.validator.validate_examples(path, ROOT, diagnostics)
+        blocks = self.validator.validate_examples(source, self.root, diagnostics)
         self.assertFalse(
             any(block.lstrip().startswith("step1 [") for block in blocks),
             "the anti-pattern fragment must use a non-DOT fence",
