@@ -98,10 +98,10 @@ class EvalToolingTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             (root / "skills-manifest.yaml").write_text(
-                yaml.safe_dump({"skills": [{"name": "brainstorming", "invocation": "automatic", "description": "custom"}]}),
+                yaml.safe_dump({"skills": [{"name": "repository-reconnaissance", "invocation": "automatic", "description": "custom"}]}),
                 encoding="utf-8",
             )
-            trigger = root / "evals" / "brainstorming" / "trigger.yaml"
+            trigger = root / "evals" / "repository-reconnaissance" / "trigger.yaml"
             trigger.parent.mkdir(parents=True)
             trigger.write_text("edited: true\n", encoding="utf-8")
 
@@ -112,14 +112,14 @@ class EvalToolingTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             (root / "skills-manifest.yaml").write_text(
-                yaml.safe_dump({"skills": [{"name": "brainstorming", "invocation": "automatic", "description": "custom"}]}),
+                yaml.safe_dump({"skills": [{"name": "repository-reconnaissance", "invocation": "automatic", "description": "custom"}]}),
                 encoding="utf-8",
             )
-            trigger = root / "evals" / "brainstorming" / "trigger.yaml"
+            trigger = root / "evals" / "repository-reconnaissance" / "trigger.yaml"
             trigger.parent.mkdir(parents=True)
             trigger.write_text("edited: true\n", encoding="utf-8")
 
-            self.assertEqual(0, self.bootstrap.main(["--root", str(root), "--skill", "brainstorming", "--force"]))
+            self.assertEqual(0, self.bootstrap.main(["--root", str(root), "--skill", "repository-reconnaissance", "--force"]))
             self.assertNotEqual("edited: true\n", trigger.read_text(encoding="utf-8"))
 
     def test_bootstrap_rejects_unknown_skill(self) -> None:

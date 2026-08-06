@@ -44,8 +44,6 @@ Private skills remain in the repository for local use but are excluded from publ
 ```bash
 python3 -m pip install -r requirements-dev.txt
 python3 -m unittest discover --start-directory tests --pattern 'test_*.py'
-python3 -m unittest discover --start-directory git-guardrails-claude-code/tests --pattern 'test_*.py'
-git-guardrails-claude-code/tests/test-guardrail.sh
 python3 scripts/generate-catalogue.py --check
 python3 scripts/generate-dependency-graph.py --check
 python3 scripts/validate-evals.py

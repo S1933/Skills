@@ -34,10 +34,6 @@ jobs:
         run: |
           python -m unittest discover --start-directory tests --pattern "test_*.py" --verbose
           python -m unittest codex/tests/test_skill_policy.py --verbose
-          python -m unittest discover --start-directory git-guardrails-claude-code/tests --pattern "test_*.py" --verbose
-
-      - name: Run Git guardrail fixtures
-        run: git-guardrails-claude-code/tests/test-guardrail.sh
 
       - name: Validate catalogue
         run: |

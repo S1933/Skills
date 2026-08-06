@@ -10,8 +10,28 @@ Establish exactly what to review before forming any judgment. Skipping this mean
 
 ## 1. Determine the base branch
 
-First existing wins: `develop` → `origin/develop` → `main` → `origin/main`.
-Use `git show-ref --verify` to check each candidate; stop at the first that exists.
+Resolve the base in preference order — stop at the first that yields a
+definitive result:
+
+1. **Explicit user-provided base** — highest priority; never guess over it.
+2. **Pull/merge request base** — if the current branch has an open PR/MR,
+   use its declared target (e.g. `gh pr view --json baseRefName -q .baseRefName`
+   or the MR equivalent / the `origin/<target>` ref).
+3. **Upstream of the current branch** — `git config --get branch.<current>.merge`
+   or `@{upstream}`.
+4. **Remote default branch** — `git symbolic-ref refs/remotes/origin/HEAD`
+   (usually `origin/main`).
+5. **Best-guess fallback, confirmed with the user** — e.g. the repository
+   default visible from `origin/HEAD`; if still ambiguous, ask before reviewing.
+
+Legacy heuristic (first existing of `develop` → `origin/develop` → `main` →
+`origin/main`) should only be used as the final fallback, and only after
+checking for an explicit base, a PR base, and the branch's upstream. Prefer the
+remote (`origin/main`, `origin/develop`) over a possibly stale local branch so an
+obsolete local `develop` is not mistaken for the real base.
+
+Use `git show-ref --verify` to check each candidate and stop at the first that
+exists.
 
 ## 2. Inspect every layer of change
 

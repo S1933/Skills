@@ -41,7 +41,7 @@ def render_readme(manifest: dict[str, object]) -> str:
     lines.extend(render_table(public))
     lines.extend(["", f"## Private/environment-specific skills ({len(private)})", "", "Private skills remain in the repository for local use but are excluded from public-only installation guidance and may require `.local/skills-environment.yaml`.", ""])
     lines.extend(render_table(private))
-    lines.extend(["", "## Validate", "", "```bash", "python3 -m pip install -r requirements-dev.txt", "python3 -m unittest discover --start-directory tests --pattern 'test_*.py'", "python3 -m unittest discover --start-directory git-guardrails-claude-code/tests --pattern 'test_*.py'", "git-guardrails-claude-code/tests/test-guardrail.sh", "python3 scripts/generate-catalogue.py --check", "python3 scripts/generate-dependency-graph.py --check", "python3 scripts/validate-evals.py", "python3 scripts/validate-skills.py", "git ls-files '*.sh' '*.zsh' | xargs shellcheck", "```", "", "See [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md) for licensing and adapted upstream material.", ""])
+    lines.extend(["", "## Validate", "", "```bash", "python3 -m pip install -r requirements-dev.txt", "python3 -m unittest discover --start-directory tests --pattern 'test_*.py'", "python3 scripts/generate-catalogue.py --check", "python3 scripts/generate-dependency-graph.py --check", "python3 scripts/validate-evals.py", "python3 scripts/validate-skills.py", "git ls-files '*.sh' '*.zsh' | xargs shellcheck", "```", "", "See [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md) for licensing and adapted upstream material.", ""])
     return "\n".join(lines)
 
 

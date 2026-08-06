@@ -12,10 +12,7 @@ import yaml
 
 
 CORE_BEHAVIOR_SKILLS = {
-    "brainstorming", "codex", "dispatching-parallel-agents", "git-guardrails-claude-code",
-    "improve", "receiving-code-review", "repository-reconnaissance",
-    "requesting-code-review", "subagent-driven-development", "systematic-debugging",
-    "test-driven-development", "verification-before-completion", "writing-plans", "writing-skills",
+    "codex", "repository-reconnaissance",
 }
 
 

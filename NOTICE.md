@@ -19,8 +19,12 @@ Full retained licence texts are in [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSE
 - Licence: MIT, copyright 2026 shadcn
 - Local changes include evidence/safety contracts, progressive disclosure, and catalogue integration.
 
-## Anthropic documentation
+The repository no longer retains vendored copies of upstream skills. Skills are
+installed dynamically from their canonical upstream sources (see
+[`docs/migration-npx.md`](docs/migration-npx.md) and
+[`external-skills.yaml`](external-skills.yaml)); their licence and attribution
+remain with their upstream repositories.
 
-`writing-skills/anthropic-best-practices.md` is an original link-only routing note to Anthropic’s current platform documentation. The external documentation is not copied into or relicensed by this repository.
-
-Contributors must add or update this notice whenever adapting material from another source and must preserve any source-level licence or attribution metadata.
+Contributors must add or update this notice whenever adapting material from
+another source and must preserve any source-level licence or attribution
+metadata.

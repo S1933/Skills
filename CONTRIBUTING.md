@@ -29,8 +29,6 @@ Public content must not contain personal home paths, internal hostnames, private
 ```bash
 python3 -m unittest discover --start-directory tests --pattern 'test_*.py'
 python3 -m unittest codex/tests/test_skill_policy.py
-python3 -m unittest discover --start-directory git-guardrails-claude-code/tests --pattern 'test_*.py'
-git-guardrails-claude-code/tests/test-guardrail.sh
 python3 scripts/generate-catalogue.py
 python3 scripts/generate-dependency-graph.py
 python3 scripts/generate-catalogue.py --check

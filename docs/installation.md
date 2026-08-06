@@ -35,7 +35,6 @@ Existing shells that source `[REMOVED-INTERNAL-SKILL]/rr.zsh` continue to work t
 ```bash
 python3 -m unittest discover --start-directory tests --pattern 'test_*.py'
 python3 -m unittest codex/tests/test_skill_policy.py
-git-guardrails-claude-code/tests/test-guardrail.sh
 python3 scripts/generate-catalogue.py --check
 python3 scripts/generate-dependency-graph.py --check
 python3 scripts/validate-evals.py
