@@ -27,7 +27,7 @@ not a base-selection step and must not gate the review. Only run this when
 a tracking branch exists (skip on detached HEAD or branches without an
 upstream):
 
-```
+```bash
 git rev-parse --abbrev-ref @{upstream} >/dev/null 2>&1 \
   && git rev-list @{upstream}..HEAD --count \
   || echo "no upstream configured — skipping unpushed check"
