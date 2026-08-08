@@ -13,7 +13,9 @@ canonical upstream repositories.
 - 1 skill from `juliusbrussee/caveman`;
 - 11 skills maintained in `S1933/skills`;
 - global installation scoped to the target agent;
-- **33 skills installed in total** (22 externals, 11 maintained locally).
+- **33 skills installed for `claude-code`; 32 for `codex`, `opencode`, and `cursor`**
+  (22 externals + 11 maintained locally, minus the Claude-Code-only
+  `tech-debt-audit` on the other three agents).
 
 The four private skills of `S1933/skills` (`[REMOVED-INTERNAL-SKILL]`, `[REMOVED-INTERNAL-SKILL]`, `[REMOVED-INTERNAL-SKILL]`,
 `[REMOVED-INTERNAL-SKILL]`) are **not** installed by this migration.
@@ -164,8 +166,12 @@ Check notably for the presence of:
 - `tdd`, `diagnosing-bugs` and `code-review`;
 - `triage`, `to-spec` and `to-tickets`;
 - `dispatching-parallel-agents` and `verification-before-completion`;
-- `tech-debt-audit`;
+- `tech-debt-audit` (**only under `claude-code`**; absent on the other three
+  agents, by design);
 - `repository-reconnaissance`, `review-scope` and `[REMOVED-INTERNAL-SKILL]`.
+
+`claude-code` should show **33** skills; `codex`, `opencode`, and `cursor` should
+each show **32** (the difference is the Claude-Code-only `tech-debt-audit`).
 
 ## Later updates
 
@@ -173,14 +179,20 @@ A bare `npx skills update --global` updates every global skill, including ones
 outside this catalogue's declared selection. Prefer replaying the six `add`
 commands above (steps 4-9): invoking `add` with the same source, pin `--agent`,
 and the same `--skill` selection is idempotent and refreshes only the declared
-33 skills. Re-running add with the same source and skill selection is
-idempotent; it overwrites already-present files automatically.
+selection (33 for `claude-code`, 32 for the other three agents). Re-running
+add with the same source and skill selection is idempotent; it overwrites
+already-present files automatically.
 
 ```bash
 for agent in $AGENTS; do \
   npx --yes skills@latest update --global --agent "$agent" --yes; \
 done
 ```
+
+`update --global` is a per-agent sweep: it does not depend on `tech-debt-audit`
+being claude-code-only, so the loop above remains correct. After the sweep,
+re-verify per-agent counts (33 / 32 / 32 / 32) — the update will not have
+introduced `tech-debt-audit` on the non-claude-code agents.
 
 Re-run the six `add` commands if the declared selection changes or if a skill
 is renamed upstream. For a reproducible, auditable install, record the pinned
