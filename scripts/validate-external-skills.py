@@ -19,6 +19,10 @@ Strengthened per review:
   (e.g. `--agent claude-code codex`), matching the real CLI behaviour.
 - --yes flag verification: the validator checks that the `skills add`
   --yes confirmation flag is present (separate from npx's --yes).
+- Agent coverage from variables, not loops: a `for agent in $AGENTS` loop
+  is structural context only. Coverage expands to $AGENTS only when
+  `$agent` actually appears in `--agent` values. A command inside a
+  for-loop with `--agent claude-code` covers only claude-code.
 
 The doc may reference removed/legacy skills in prose or in `remove` blocks
 without invalidating the validator.
@@ -68,6 +72,17 @@ COPY_FLAG_RE = re.compile(r"(?:^|\s)--copy(?:\s|$)")
 # Used with a substring from the end of the add subcommand.
 YES_FLAG_RE = re.compile(r"--yes\b")
 
+# Detect $agent (the loop variable) appearing as a value after --agent.
+# Matches: --agent "$agent", --agent $agent, --agent "$agent" windsurf, etc.
+AGENT_VAR_RE = re.compile(
+    r"--agent\s+(?:"
+    r'"[^"]*\$agent[^"]*"'
+    r"|"
+    r"'[^']*\$agent[^']*'"
+    r"|"
+    r"\S*\$agent\S*"
+    r")"
+)
 
 # Flags known to accept variadic values. Boolean flags (--yes, --global,
 # --copy, --force) are detected by dedicated regexes; the variadic parser
@@ -127,14 +142,21 @@ class AddBlock:
     fenced block)."""
 
     source: str
-    # Agents targeted by this command. Derived from --agent flag(s).
+    # Literal agent names from --agent flag(s), excluding shell variable
+    # references ($agent etc.). These are the agents that are ALWAYS
+    # targeted regardless of whether a loop is present.
     literal_agents: list[str] = field(default_factory=list)
     # Skills installed by this command. Derived from --skill flag(s).
     skills: list[str] = field(default_factory=list)
-    # True if the command uses `for agent in $AGENTS` (or similar loop).
-    # When true, the per-command agent reach is the AGENTS set defined at
-    # the top of the doc.
-    uses_agent_loop: bool = False
+    # True if the command is inside a `for agent in $AGENTS; do ... done`
+    # loop. This is structural context only — it does NOT imply that all
+    # agents in $AGENTS are targeted. Coverage expansion to $AGENTS
+    # happens only when uses_agent_variable is True.
+    has_agent_loop: bool = False
+    # True if $agent (the loop variable) appears as a value of --agent.
+    # When true, the effective agent set includes all agents from the
+    # doc's AGENTS set (doc_agents) in addition to any literal_agents.
+    uses_agent_variable: bool = False
     # True if this command carries the required --global flag.
     has_global_flag: bool = False
     # True if this command carries the required --copy flag.
@@ -227,7 +249,7 @@ def _split_block_into_commands(body: str) -> list[str]:
       4. Fold `for ... do` preambles into the next add command.
       5. Track `in_agent_loop` state across commands: once a
          `for agent in $AGENTS; do` is seen, every subsequent add command
-         in the same fenced block inherits the `uses_agent_loop=True`
+         in the same fenced block inherits the `has_agent_loop=True`
          marker until a `done` closes the loop. Without this rule, a
          loop containing two `npx skills@latest add` commands would
          correctly attach the marker to the first command but miss the
@@ -298,7 +320,12 @@ def _extract_add_command(
         return None
     source = cmd_match.group("source") or fallback_source
     block = AddBlock(source=source, block_index=block_index)
-    block.uses_agent_loop = bool(re.search(r"for\s+agent\s+in\s+\$AGENTS", segment))
+
+    # Structural: is this command inside a `for agent in $AGENTS` loop?
+    block.has_agent_loop = bool(re.search(r"for\s+agent\s+in\s+\$AGENTS", segment))
+    # Intent: does $agent actually appear as a value of --agent?
+    block.uses_agent_variable = bool(AGENT_VAR_RE.search(segment))
+
     block.has_global_flag = bool(GLOBAL_FLAG_RE.search(segment))
     block.has_copy_flag = bool(COPY_FLAG_RE.search(segment))
 
@@ -307,6 +334,8 @@ def _extract_add_command(
     block.has_yes_flag = bool(YES_FLAG_RE.search(segment[add_end:]))
 
     # Variadic option parsing: --agent and --skill accept multiple values.
+    # literal_agents gets only the non-variable values (e.g. "claude-code",
+    # not "$agent"). Variable refs are detected by uses_agent_variable above.
     opts = _parse_variadic_options(segment)
     block.literal_agents = [a for a in opts.get("agent", []) if not a.startswith("$")]
     # Deduplicate while preserving order.
@@ -438,6 +467,12 @@ def main(
     # own (no cross-contamination of flags, agents, skills), and then
     # the union of all commands for a source is verified to cover every
     # declared (agent, skill) pair — not just the independent unions.
+    #
+    # Agent coverage is derived from what --agent actually receives:
+    #   - literal_agents are always covered.
+    #   - If uses_agent_variable is True, doc_agents are added (because
+    #     $agent expands to each agent in the loop).
+    #   - A for-loop without $agent in --agent does NOT expand coverage.
     # ---
     for decl in decls:
         decl_skills = set(decl.skills)
@@ -471,61 +506,63 @@ def main(
                     f"not npx's --yes)",
                 )
 
-            # 3b. Per-command agent checks: literals must be in decl_agents;
-            # loop usage must be consistent with decl_agents vs $AGENTS.
-            if b.uses_agent_loop:
+            # 3b. Build the effective agent set for this command.
+            #     Start with literal agents, then add doc_agents only if
+            #     $agent actually appears in --agent values.
+            cmd_agents = set(b.literal_agents)
+            if b.uses_agent_variable:
                 if doc_agents:
-                    extra = doc_agents - decl_agents
-                    if extra:
-                        report(
-                            errors,
-                            f"source {decl.name!r} install block iterates "
-                            f"$AGENTS which includes {sorted(extra)}; these "
-                            f"are not in the source's declared agents list "
-                            f"({sorted(decl_agents)})",
-                        )
-                    missing_from_loop = decl_agents - doc_agents
-                    if missing_from_loop:
-                        report(
-                            errors,
-                            f"source {decl.name!r} declares agents "
-                            f"{sorted(missing_from_loop)} but the doc's "
-                            f"AGENTS set ({sorted(doc_agents)}) does not "
-                            f"include them; the loop will not install on "
-                            f"these agents",
-                        )
-                # The loop's reach: every agent in $AGENTS gets every skill
-                # this command installs.
-                cmd_agents = doc_agents if doc_agents else set()
-                union_agents |= cmd_agents
-                for agent in cmd_agents:
-                    for skill in b.skills:
-                        if agent in decl_agents and skill in decl_skills:
-                            covered_pairs.add((agent, skill))
-            else:
-                if not b.literal_agents:
+                    cmd_agents |= doc_agents
+
+            # 3c. Validate every agent in the effective set.
+            if not cmd_agents:
+                report(
+                    errors,
+                    f"install block #{b.block_index} for {decl.name!r} has "
+                    f"no --agent flag and no `$AGENTS` loop variable",
+                )
+            for agent in sorted(cmd_agents):
+                if agent not in decl_agents:
                     report(
                         errors,
-                        f"install block #{b.block_index} for {decl.name!r} has "
-                        f"no --agent flag and no `$AGENTS` loop",
+                        f"install block #{b.block_index} for {decl.name!r} "
+                        f"uses --agent {agent!r} which is not in the "
+                        f"source's declared agents list "
+                        f"({sorted(decl_agents)})",
                     )
-                for agent in b.literal_agents:
-                    if agent not in decl_agents:
-                        report(
-                            errors,
-                            f"install block #{b.block_index} for {decl.name!r} "
-                            f"uses --agent {agent!r} which is not in the "
-                            f"source's declared agents list "
-                            f"({sorted(decl_agents)})",
-                        )
-                union_agents |= set(b.literal_agents)
-                for agent in b.literal_agents:
-                    if agent in decl_agents:
-                        for skill in b.skills:
-                            if skill in decl_skills:
-                                covered_pairs.add((agent, skill))
 
-            # 3c. Skills added by this command must be declared.
+            # 3d. Structural sanity: if this command uses $agent expansion,
+            #     the loop's AGENTS set should be consistent with the
+            #     declared agents.
+            if b.has_agent_loop and b.uses_agent_variable and doc_agents:
+                extra = doc_agents - decl_agents
+                if extra:
+                    report(
+                        errors,
+                        f"source {decl.name!r} install block iterates "
+                        f"$AGENTS which includes {sorted(extra)}; these "
+                        f"are not in the source's declared agents list "
+                        f"({sorted(decl_agents)})",
+                    )
+                missing_from_loop = decl_agents - doc_agents
+                if missing_from_loop:
+                    report(
+                        errors,
+                        f"source {decl.name!r} declares agents "
+                        f"{sorted(missing_from_loop)} but the doc's "
+                        f"AGENTS set ({sorted(doc_agents)}) does not "
+                        f"include them; the loop will not install on "
+                        f"these agents",
+                    )
+
+            union_agents |= cmd_agents
+            for agent in cmd_agents:
+                if agent in decl_agents:
+                    for skill in b.skills:
+                        if skill in decl_skills:
+                            covered_pairs.add((agent, skill))
+
+            # 3e. Skills added by this command must be declared.
             for skill in b.skills:
                 if skill not in decl_skills:
                     report(
@@ -535,12 +572,11 @@ def main(
                         f"external-skills.yaml",
                     )
 
-        # 3d. Every declared (agent, skill) pair must be covered.
+        # 3f. Every declared (agent, skill) pair must be covered.
         if decl_agents and decl_skills:
             expected_pairs = {(a, s) for a in decl_agents for s in decl_skills}
             missing_pairs = expected_pairs - covered_pairs
             if missing_pairs:
-                # Group by agent for readable error messages.
                 by_agent: dict[str, list[str]] = defaultdict(list)
                 for agent, skill in sorted(missing_pairs):
                     by_agent[agent].append(skill)
@@ -553,8 +589,7 @@ def main(
                         f"install command)",
                     )
 
-        # 3e. Every declared skill must be installed at least once
-        # (quick check: if a skill has zero covered pairs, it's missing).
+        # 3g. Every declared skill must be installed at least once.
         installed_skills = {s for _, s in covered_pairs}
         missing_skills = decl_skills - installed_skills
         if missing_skills:
@@ -564,8 +599,7 @@ def main(
                 f"but no install block in docs/migration-npx.md adds them",
             )
 
-        # 3f. Every declared agent must appear in at least one install
-        # command (union across all commands for this source).
+        # 3h. Every declared agent must appear in at least one install command.
         if decl_agents:
             missing_agents = decl_agents - union_agents
             if missing_agents:
