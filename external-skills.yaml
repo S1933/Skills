@@ -76,6 +76,16 @@ sources:
     claude_code_only: false
     notes: "Manually invoked (/i-have-adhd). Shapes output for ADHD readers: lead with action, number steps, suppress tangents, restate state."
 
+  - name: juliusbrussee/caveman
+    # upstream := https://github.com/juliusbrussee/caveman
+    # also listed on https://skills.sh/juliusbrussee/caveman/caveman
+    selection: [caveman]
+    agents: [claude-code, codex, opencode, cursor]
+    verified_commit: null
+    verified_at: null
+    claude_code_only: false
+    notes: "Ultra-compressed communication mode (65% token reduction). Manually invoked. Supports lite/full/ultra/wenyan intensity levels."
+
 maintained_locally:
   # 11 public skills installed from S1933/skills itself (self-hosted source).
   - source: S1933/skills
