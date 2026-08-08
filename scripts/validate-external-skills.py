@@ -7,6 +7,12 @@ Strengthened per CodeRabbit review:
 - Verifies source / agent / skill mappings structurally against
   external-skills.yaml (declarations ↔ install blocks).
 - Scans every --force occurrence, not just the first.
+- Per-command parsing: each `npx skills@latest add` invocation in a fenced
+  block becomes its own AddBlock with its own flags/agents/skills; flags
+  and selections never bleed across commands.
+- Union-based agent coverage: when a source is installed via several
+  commands, the union of all commands' agent reach is what must cover
+  the declared agent list. A single command may only target a subset.
 
 The doc may reference removed/legacy skills in prose or in `remove` blocks
 without invalidating the validator.
@@ -45,6 +51,7 @@ ADD_CMD_RE = re.compile(
     r"npx\s+--yes\s+skills@latest\s+add\s+(?P<source>[\w./-]+)"
 )
 
+ADD_CMD_HEAD_RE = re.compile(r"npx\s+--yes\s+skills@latest\s+add\b")
 AGENT_LITERAL_RE = re.compile(r"--agent\s+(\S+)")
 SKILL_RE = re.compile(r"--skill\s+([\w.-]+)")
 GLOBAL_FLAG_RE = re.compile(r"(?:^|\s)--global(?:\s|$)")
@@ -117,64 +124,95 @@ def parse_doc_agent_set(doc: str) -> set[str]:
     return set(m.group(1).split())
 
 
+def _is_for_loop_opener(text: str) -> bool:
+    r"""True if the text is a `for ... in $AGENTS; do \` style opener or `do` line.
+
+    These are preambles that must be folded into the following add command
+    so per-command loop detection has the necessary context.
+    """
+    stripped = text.strip()
+    if not stripped:
+        return False
+    if re.search(r"for\s+agent\s+in\s+\$AGENTS\b", stripped):
+        return True
+    if stripped in {"do", "do \\"}:
+        return True
+    if re.match(r"^do\s*\\?\s*$", stripped):
+        return True
+    return False
+
+
 def _split_block_into_commands(body: str) -> list[str]:
     r"""Split a fenced block body into one chunk per `npx skills@latest add`.
 
     A block may contain several `add` commands (or `add` and `remove`, etc.)
-    chained by shell `;` or by being on distinct logical lines. We split on
-    `;` boundaries (which terminate a `for ... do; \` chain) and on bare
-    newlines that start a new `npx ... skills@latest add` invocation.
+    chained by shell `;` or by being on distinct logical lines. The output
+    is a list of segments, one per `add` command, where the leading
+    preamble (e.g. `for ... do`) is folded into the segment that follows
+    it so per-command loop detection still works. Trailing `done` and
+    empty segments are dropped.
 
-    The function does NOT validate; it only groups raw text so that
-    downstream regexes can run per command. A leading `for ... do` (or
-    similar) preamble is folded into the next add command so the
-    per-command view still has the loop marker.
+    Splitting rules:
+      1. Normalize line continuations (`\<newline>` -> space) so a wrapped
+         `for ... do; \` chain reads as a single logical line.
+      2. Split on shell `;` boundaries.
+      3. Within each `;` segment, split on every fresh `npx ... skills@latest
+         add` invocation so two distinct commands on separate lines become
+         two distinct segments.
+      4. Fold `for ... do` preambles into the next add command.
     """
     # Normalize line continuations: " \<newline>" -> " " so the block
     # reads as a single logical line per `;` segment.
     flat = re.sub(r"\\\s*\n", " ", body)
-    # Split on shell `;` to get individual commands. `for ... do; \` already
-    # became a single segment because of the normalization above.
-    raw_segments = [seg.strip() for seg in flat.split(";") if seg.strip()]
-    # Within each segment, split on a fresh `npx ... skills@latest add` so
-    # blocks like "echo hi\nnpx ... add A ... \n npx ... add B ..." are
-    # decomposed into separate parts.
+    # Split on shell `;` to get individual commands.
+    semicolon_segments = [seg.strip() for seg in flat.split(";") if seg.strip()]
+
+    # Within each `;` segment, split on a fresh `npx ... skills@latest add`.
+    # Each "part" is either an add command or a non-add piece (e.g. the
+    # body of a `remove` command, which we drop).
     raw_parts: list[str] = []
-    for seg in raw_segments:
+    for seg in semicolon_segments:
         cursor = 0
-        for m in re.finditer(
-            r"npx\s+--yes\s+skills@latest\s+add\b", seg
-        ):
+        for m in re.finditer(ADD_CMD_HEAD_RE, seg):
             if m.start() > cursor:
                 # Text before the next add command (e.g. a `for ... do`
                 # preamble, or trailing flags from the previous command)
                 # becomes its own part.
-                raw_parts.append(seg[cursor:m.start()].strip())
-            raw_parts.append(seg[m.start():].strip())
-            cursor = m.end()
+                head = seg[cursor:m.start()].strip()
+                if head:
+                    raw_parts.append(head)
+            # The add command's text is bounded by THIS `npx` and the
+            # START of the next `npx` (if any). Without this `end` bound,
+            # the prior implementation pulled the rest of the segment,
+            # which fused subsequent commands into one block.
+            end = m.end()
+            nxt = ADD_CMD_HEAD_RE.search(seg, end)
+            stop = nxt.start() if nxt else len(seg)
+            raw_parts.append(seg[m.start():stop].strip())
+            cursor = stop
         if cursor < len(seg):
             tail = seg[cursor:].strip()
             if tail:
                 raw_parts.append(tail)
-    raw_parts = [p for p in raw_parts if p]
-    # Fold any leading non-add part(s) (e.g. "for agent in $AGENTS", "do")
-    # into the first following add command so per-command loop detection
-    # has the necessary context. Trailing non-add parts (e.g. a bare
-    # `done`) are dropped.
+
+    # Fold `for ... do` preambles into the next add command so the
+    # per-command loop marker is preserved. Trailing `done` and any
+    # other non-add tail is dropped (it's noise for the validator).
     commands: list[str] = []
     pending_preamble: list[str] = []
     for part in raw_parts:
-        if "npx --yes skills@latest add" in part:
+        if ADD_CMD_HEAD_RE.search(part):
             merged = " ".join(pending_preamble + [part])
             commands.append(merged)
             pending_preamble = []
-        else:
-            # A non-add segment that is NOT a trailing closer becomes part
-            # of the preamble for the next add command. A trailing closer
-            # (e.g. `done`, or a `--yes;` flag tail) is dropped by simply
-            # not appending it; the per-command flags regexes only need
-            # the add line itself plus any preamble.
+        elif _is_for_loop_opener(part):
+            # Loop opener belongs to the following add command.
             pending_preamble.append(part)
+        else:
+            # Non-add part that is neither a loop opener nor a fresh
+            # add command. Examples: a `remove` command body, a trailing
+            # `done`, etc. None of these affect the add-block accounting.
+            continue
     return commands
 
 
@@ -212,7 +250,8 @@ def parse_add_blocks(doc: str) -> list[AddBlock]:
     A single fenced block may contain multiple independent `add` commands
     (delimited by shell `;` or by being on separate logical lines). Each
     such command becomes its own AddBlock so that flag validation and
-    agent coverage checks run per command.
+    agent coverage checks run per command with NO cross-contamination
+    of flags, agents, or skills between commands.
     """
     blocks: list[AddBlock] = []
     for idx, fence in enumerate(FENCED_BASH_RE.finditer(doc)):
@@ -269,13 +308,18 @@ def main() -> int:
                 f"{b.source!r} (no entry in external-skills.yaml sources)",
             )
 
-    # --- Check 3: per-source skill coverage and per-block agent mapping. ---
+    # --- Check 3: per-command flag/agent/skill checks, then union-level
+    # agent and skill coverage per source. Each command is checked on its
+    # own (no cross-contamination of flags, agents, skills), and then the
+    # union of all commands for a source is verified to cover every
+    # declared agent and every declared skill. ---
     for decl in decls:
         decl_skills = set(decl.skills)
         decl_agents = set(decl.agents)
         installed_skills: set[str] = set()
+        union_agents: set[str] = set()
         for b in blocks_by_source.get(decl.name, []):
-            # 3a.0. Required flags on every add command.
+            # 3a. Required flags on every add command.
             if not b.has_global_flag:
                 report(
                     errors,
@@ -290,11 +334,9 @@ def main() -> int:
                     f"missing the required --copy flag on its `npx skills "
                     f"add` command",
                 )
-            # 3a. Agent reachability for this block.
+            # 3b. Per-command agent checks: literals must be in decl_agents;
+            # loop usage must be consistent with decl_agents vs $AGENTS.
             if b.uses_agent_loop:
-                # The loop iterates over $AGENTS. Verify that every agent
-                # reachable via the loop is declared for this source, and
-                # that every declared agent is reachable.
                 if doc_agents:
                     extra = doc_agents - decl_agents
                     if extra:
@@ -315,6 +357,9 @@ def main() -> int:
                             f"include them; the loop will not install on "
                             f"these agents",
                         )
+                # The loop's reach contributes to the union.
+                if doc_agents:
+                    union_agents |= doc_agents
             else:
                 if not b.literal_agents:
                     report(
@@ -322,7 +367,6 @@ def main() -> int:
                         f"install block #{b.block_index} for {decl.name!r} has "
                         f"no --agent flag and no `$AGENTS` loop",
                     )
-                literal_set = set(b.literal_agents)
                 for agent in b.literal_agents:
                     if agent not in decl_agents:
                         report(
@@ -332,21 +376,8 @@ def main() -> int:
                             f"source's declared agents list "
                             f"({sorted(decl_agents)})",
                         )
-                # Every declared agent must be installed by SOME block for
-                # this source. With per-command accounting, a non-loop
-                # block's literal agents MUST cover all declared agents
-                # for this source.
-                if literal_set and decl_agents:
-                    missing_agents = decl_agents - literal_set
-                    if missing_agents:
-                        report(
-                            errors,
-                            f"install block #{b.block_index} for {decl.name!r} "
-                            f"installs only --agent {sorted(literal_set)} but "
-                            f"the source declares agents {sorted(decl_agents)}; "
-                            f"missing coverage for {sorted(missing_agents)}",
-                        )
-            # 3b. Skills added must all be declared.
+                union_agents |= set(b.literal_agents)
+            # 3c. Skills added by this command must be declared.
             for skill in b.skills:
                 if skill not in decl_skills:
                     report(
@@ -356,39 +387,31 @@ def main() -> int:
                         f"external-skills.yaml",
                     )
                 installed_skills.add(skill)
-        # 3c. Every declared skill for this source must be installed.
-        missing = decl_skills - installed_skills
-        if missing:
+        # 3d. Every declared skill for this source must be installed
+        # (union across all commands for this source).
+        missing_skills = decl_skills - installed_skills
+        if missing_skills:
             report(
                 errors,
-                f"source {decl.name!r} declares skills {sorted(missing)} but no "
-                f"install block in docs/migration-npx.md adds them",
+                f"source {decl.name!r} declares skills {sorted(missing_skills)} "
+                f"but no install block in docs/migration-npx.md adds them",
             )
-
-    # --- Check 3d: every declared agent for every source has install
-    # coverage across ALL blocks for that source (loop or literal). This
-    # is the union of the per-block checks above and catches cases where
-    # the source is covered across several blocks but no single block
-    # covers every declared agent.
-    for decl in decls:
-        decl_agents = set(decl.agents)
-        if not decl_agents:
-            continue
-        covered: set[str] = set()
-        for b in blocks_by_source.get(decl.name, []):
-            if b.uses_agent_loop:
-                covered |= doc_agents
-            else:
-                covered |= set(b.literal_agents)
-        still_missing = decl_agents - covered
-        if still_missing:
-            report(
-                errors,
-                f"source {decl.name!r} declares agents {sorted(still_missing)} "
-                f"but no install block installs on them "
-                f"(union of literal_agents and $AGENTS reaches "
-                f"{sorted(covered)})",
-            )
+        # 3e. Every declared agent for this source must appear in at
+        # least one install command (union across all commands for this
+        # source). This catches cases where the doc splits the install
+        # across several commands (e.g. one for claude-code, one for
+        # codex) and one of the declared agents has no command at all.
+        if decl_agents:
+            missing_agents = decl_agents - union_agents
+            if missing_agents:
+                report(
+                    errors,
+                    f"source {decl.name!r} declares agents "
+                    f"{sorted(missing_agents)} but no install command in "
+                    f"docs/migration-npx.md installs on them "
+                    f"(union of literal_agents and $AGENTS reaches "
+                    f"{sorted(union_agents)})",
+                )
 
     # --- Check 4: install-count prose in the doc must match the YAML. ---
     #
@@ -404,7 +427,7 @@ def main() -> int:
     )
     claude_code_only_skill_count = sum(
         len(s.get("selection", []))
-        for s in data.get("sources", [])
+        for s in decls_for_count
         if s.get("claude_code_only")
     )
     expected_claude = declared_total
