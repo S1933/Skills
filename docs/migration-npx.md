@@ -9,9 +9,13 @@ canonical upstream repositories.
 - 15 skills from `mattpocock/skills`;
 - 4 skills from `obra/superpowers`;
 - 1 skill from `ksimback/tech-debt-skill`;
+- 1 skill from `ayghri/i-have-adhd`;
+- 1 skill from `juliusbrussee/caveman`;
 - 11 skills maintained in `S1933/skills`;
 - global installation scoped to the target agent;
-- **31 skills installed in total**.
+- **33 skills installed for `claude-code`; 32 for `codex`, `opencode`, and `cursor`**
+  (22 externals + 11 maintained locally, minus the Claude-Code-only
+  `tech-debt-audit` on the other three agents).
 
 The four private skills of `S1933/skills` (`[REMOVED-INTERNAL-SKILL]`, `[REMOVED-INTERNAL-SKILL]`, `[REMOVED-INTERNAL-SKILL]`,
 `[REMOVED-INTERNAL-SKILL]`) are **not** installed by this migration.
@@ -97,14 +101,44 @@ done
 
 ## 6. Install the technical-debt audit skill (1)
 
+This skill declares itself Claude-Code-only (`claude_code_only: true` in
+`external-skills.yaml`): it relies on TodoWrite and the Task tool, which are
+not available in the other agents. Install it for `claude-code` only.
+
+```bash
+npx --yes skills@latest add ksimback/tech-debt-skill --global --copy \
+  --agent claude-code --skill tech-debt-audit --yes
+```
+
+## 7. Install i-have-adhd (1)
+
+Manually-invoked communication style for ADHD readers: lead with action, number
+steps, suppress tangents, restate state. Installable as a normal `npx skills add`
+target (verified at https://skills.sh/ayghri/i-have-adhd).
+
 ```bash
 for agent in $AGENTS; do \
-  npx --yes skills@latest add ksimback/tech-debt-skill --global --copy \
-    --agent "$agent" --skill tech-debt-audit --yes; \
+  npx --yes skills@latest add ayghri/i-have-adhd --global --copy \
+    --agent "$agent" --skill i-have-adhd --yes; \
 done
 ```
 
-## 7. Install the S1933/skills-specific skills (11)
+## 8. Install caveman (1)
+
+Ultra-compressed communication mode (65% token reduction). Note: upstream
+allows auto-triggering when token efficiency is requested; can conflict with
+`i-have-adhd` (both are persistent formatting modes). Supports lite / full /
+ultra / wenyan intensity levels. Installable as a normal
+`npx skills add` target (verified at https://skills.sh/juliusbrussee/caveman/caveman).
+
+```bash
+for agent in $AGENTS; do \
+  npx --yes skills@latest add juliusbrussee/caveman --global --copy \
+    --agent "$agent" --skill caveman --yes; \
+done
+```
+
+## 9. Install the S1933/skills-specific skills (11)
 
 The explicit selection avoids installing the old third-party copies that are
 still present on the `improve/skills-catalogue` branch.
@@ -120,7 +154,7 @@ for agent in $AGENTS; do \
 done
 ```
 
-## 8. Verify the installation
+## 10. Verify the installation
 
 ```bash
 for agent in $AGENTS; do \
@@ -134,27 +168,40 @@ Check notably for the presence of:
 - `tdd`, `diagnosing-bugs` and `code-review`;
 - `triage`, `to-spec` and `to-tickets`;
 - `dispatching-parallel-agents` and `verification-before-completion`;
-- `tech-debt-audit`;
+- `tech-debt-audit` (**only under `claude-code`**; absent on the other three
+  agents, by design);
 - `repository-reconnaissance`, `review-scope` and `[REMOVED-INTERNAL-SKILL]`.
+
+`claude-code` should show **33** skills added by this migration; `codex`,
+`opencode`, and `cursor` should each show **32** (the difference is the
+Claude-Code-only `tech-debt-audit`).
 
 ## Later updates
 
 A bare `npx skills update --global` updates every global skill, including ones
-outside this catalogue's declared selection. Prefer replaying the four `add`
-commands above (steps 4-7): invoking `add` with the same source, pin `--agent`,
+outside this catalogue's declared selection. Prefer replaying the six `add`
+commands above (steps 4-9): invoking `add` with the same source, pin `--agent`,
 and the same `--skill` selection is idempotent and refreshes only the declared
-31 skills. Use `--force` if the CLI skips already-present files.
+selection (33 for `claude-code`, 32 for the other three agents). Re-running
+add with the same source and skill selection is idempotent; it overwrites
+already-present files automatically.
 
 ```bash
-for agent in $AGENTS; do \
-  npx --yes skills@latest update --global --agent "$agent" --yes; \
-done
+npx --yes skills@latest update --global --yes
 ```
 
-Re-run the four `add` commands if the declared selection changes or if a skill
-is renamed upstream. For a reproducible, auditable install, record the pinned
-upstream commit in `external-skills.yaml` and re-install from that commit rather
-than from the moving default branch.
+A bare `update --global` refreshes every installed skill including ones
+outside this catalogue's declared selection. Prefer the `add` commands above
+when the declared selection changes. After updating, re-verify per-agent
+counts (33 / 32 / 32 / 32) — `update` does not introduce `tech-debt-audit`
+on non-claude-code agents.
+
+Re-run the six `add` commands if the declared selection changes or if a skill
+is renamed upstream. The `verified_commit` fields in `external-skills.yaml`
+record the upstream revision at the time of the last audit; they are not a
+reproducibility mechanism (the CLI installs from the default branch, and
+`owner/repo#SHA` is not supported). For a truly immutable install, pin a
+local checkout at the audited commit.
 
 ## Voluntary exclusions
 

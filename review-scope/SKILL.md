@@ -17,18 +17,37 @@ definitive result:
 2. **Pull/merge request base** — if the current branch has an open PR/MR,
    use its declared target (e.g. `gh pr view --json baseRefName -q .baseRefName`
    or the MR equivalent / the `origin/<target>` ref).
-3. **Upstream of the current branch** — `git config --get branch.<current>.merge`
-   or `@{upstream}`.
-4. **Remote default branch** — `git symbolic-ref refs/remotes/origin/HEAD`
+3. **Remote default branch** — `git symbolic-ref refs/remotes/origin/HEAD`
    (usually `origin/main`).
-5. **Best-guess fallback, confirmed with the user** — e.g. the repository
+4. **Best-guess fallback, confirmed with the user** — e.g. the repository
    default visible from `origin/HEAD`; if still ambiguous, ask before reviewing.
 
-Legacy heuristic (first existing of `develop` → `origin/develop` → `main` →
-`origin/main`) should only be used as the final fallback, and only after
-checking for an explicit base, a PR base, and the branch's upstream. Prefer the
-remote (`origin/main`, `origin/develop`) over a possibly stale local branch so an
-obsolete local `develop` is not mistaken for the real base.
+After selecting the base, run a separate unpushed-commits check — this is
+not a base-selection step and must not gate the review. Only run this when
+a tracking branch exists (skip on detached HEAD or branches without an
+upstream):
+
+```bash
+git rev-parse --abbrev-ref @{upstream} >/dev/null 2>&1 \
+  && git rev-list @{upstream}..HEAD --count \
+  || echo "no upstream configured — skipping unpushed check"
+```
+
+If the count is non-zero, warn the reviewer that commits have not been pushed;
+the review should still proceed against the selected base.
+
+Legacy heuristic (first existing of `origin/develop` → `develop` →
+`origin/main` → `main`) should only be used as the final fallback, and only
+after checking for an explicit base and a PR base. Prefer the
+remote (`origin/develop`, `origin/main`) over a possibly stale local branch
+so an obsolete local `develop` is not mistaken for the real base.
+
+```bash
+git show-ref --verify refs/remotes/origin/develop \
+  || git show-ref --verify refs/heads/develop \
+  || git show-ref --verify refs/remotes/origin/main \
+  || git show-ref --verify refs/heads/main
+```
 
 Use `git show-ref --verify` to check each candidate and stop at the first that
 exists.

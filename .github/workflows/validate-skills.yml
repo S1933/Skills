@@ -42,5 +42,8 @@ jobs:
           python scripts/validate-evals.py
           python scripts/validate-skills.py
 
+      - name: Validate external skills manifest
+        run: python scripts/validate-external-skills.py
+
       - name: Check shell scripts
         run: git ls-files '*.sh' '*.zsh' | xargs shellcheck
