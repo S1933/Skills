@@ -99,11 +99,13 @@ done
 
 ## 6. Install the technical-debt audit skill (1)
 
+This skill declares itself Claude-Code-only (`claude_code_only: true` in
+`external-skills.yaml`): it relies on TodoWrite and the Task tool, which are
+not available in the other agents. Install it for `claude-code` only.
+
 ```bash
-for agent in $AGENTS; do \
-  npx --yes skills@latest add ksimback/tech-debt-skill --global --copy \
-    --agent "$agent" --skill tech-debt-audit --yes; \
-done
+npx --yes skills@latest add ksimback/tech-debt-skill --global --copy \
+  --agent claude-code --skill tech-debt-audit --yes
 ```
 
 ## 7. Install i-have-adhd (1)
