@@ -9,9 +9,11 @@ canonical upstream repositories.
 - 15 skills from `mattpocock/skills`;
 - 4 skills from `obra/superpowers`;
 - 1 skill from `ksimback/tech-debt-skill`;
+- 1 skill from `ayghri/i-have-adhd`;
+- 1 skill from `juliusbrussee/caveman`;
 - 11 skills maintained in `S1933/skills`;
 - global installation scoped to the target agent;
-- **31 skills installed in total**.
+- **33 skills installed in total** (22 externals, 11 maintained locally).
 
 The four private skills of `S1933/skills` (`[REMOVED-INTERNAL-SKILL]`, `[REMOVED-INTERNAL-SKILL]`, `[REMOVED-INTERNAL-SKILL]`,
 `[REMOVED-INTERNAL-SKILL]`) are **not** installed by this migration.
@@ -50,7 +52,7 @@ AGENTS="claude-code codex opencode cursor"
 for agent in $AGENTS; do \
   npx --yes skills@latest remove --global \
     --agent "$agent" \
-    --skill brainstorming --skill caveman --skill codebase-design \
+    --skill brainstorming --skill codebase-design \
     --skill decision-mapping --skill design-an-interface \
     --skill dispatching-parallel-agents --skill domain-modeling \
     --skill executing-plans --skill finishing-a-development-branch \
@@ -104,7 +106,33 @@ for agent in $AGENTS; do \
 done
 ```
 
-## 7. Install the S1933/skills-specific skills (11)
+## 7. Install i-have-adhd (1)
+
+Manually-invoked communication style for ADHD readers: lead with action, number
+steps, suppress tangents, restate state. Installable as a normal `npx skills add`
+target (verified at https://skills.sh/ayghri/i-have-adhd).
+
+```bash
+for agent in $AGENTS; do \
+  npx --yes skills@latest add ayghri/i-have-adhd --global --copy \
+    --agent "$agent" --skill i-have-adhd --yes; \
+done
+```
+
+## 8. Install caveman (1)
+
+Ultra-compressed communication mode (65% token reduction). Manually invoked;
+supports lite / full / ultra / wenyan intensity levels. Installable as a normal
+`npx skills add` target (verified at https://skills.sh/juliusbrussee/caveman/caveman).
+
+```bash
+for agent in $AGENTS; do \
+  npx --yes skills@latest add juliusbrussee/caveman --global --copy \
+    --agent "$agent" --skill caveman --yes; \
+done
+```
+
+## 9. Install the S1933/skills-specific skills (11)
 
 The explicit selection avoids installing the old third-party copies that are
 still present on the `improve/skills-catalogue` branch.
@@ -120,7 +148,7 @@ for agent in $AGENTS; do \
 done
 ```
 
-## 8. Verify the installation
+## 10. Verify the installation
 
 ```bash
 for agent in $AGENTS; do \
@@ -140,10 +168,11 @@ Check notably for the presence of:
 ## Later updates
 
 A bare `npx skills update --global` updates every global skill, including ones
-outside this catalogue's declared selection. Prefer replaying the four `add`
-commands above (steps 4-7): invoking `add` with the same source, pin `--agent`,
+outside this catalogue's declared selection. Prefer replaying the six `add`
+commands above (steps 4-9): invoking `add` with the same source, pin `--agent`,
 and the same `--skill` selection is idempotent and refreshes only the declared
-31 skills. Use `--force` if the CLI skips already-present files.
+33 skills. Re-running add with the same source and skill selection is
+idempotent; it overwrites already-present files automatically.
 
 ```bash
 for agent in $AGENTS; do \
@@ -151,7 +180,7 @@ for agent in $AGENTS; do \
 done
 ```
 
-Re-run the four `add` commands if the declared selection changes or if a skill
+Re-run the six `add` commands if the declared selection changes or if a skill
 is renamed upstream. For a reproducible, auditable install, record the pinned
 upstream commit in `external-skills.yaml` and re-install from that commit rather
 than from the moving default branch.
