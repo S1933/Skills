@@ -20,7 +20,6 @@ flowchart LR
 | embedded-fixtures | — | — |
 | go-cli-conventions | — | — |
 | golden-file-testing | — | — |
-| i-have-adhd | — | — |
 | [REMOVED-INTERNAL-SKILL] | — | — |
 | [REMOVED-INTERNAL-SKILL] | — | — |
 | repository-reconnaissance | — | — |
