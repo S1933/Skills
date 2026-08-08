@@ -60,7 +60,7 @@ sources:
 
   - name: ksimback/tech-debt-skill
     selection: [tech-debt-audit]
-    agents: [claude-code, codex, opencode, cursor]
+    agents: [claude-code]
     verified_commit: null
     verified_at: null
     claude_code_only: true
@@ -84,7 +84,7 @@ sources:
     verified_commit: null
     verified_at: null
     claude_code_only: false
-    notes: "Ultra-compressed communication mode (65% token reduction). Manually invoked. Supports lite/full/ultra/wenyan intensity levels."
+    notes: "Ultra-compressed communication mode (65% token reduction). Manually invoked only — disable-model-invocation should be set to prevent auto-triggering. Supports lite/full/ultra/wenyan intensity levels. Conflicts with i-have-adhd (both are persistent formatting modes); only one should be active at a time."
 
 maintained_locally:
   # 11 public skills installed from S1933/skills itself (self-hosted source).
