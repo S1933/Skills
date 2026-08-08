@@ -72,18 +72,6 @@ COPY_FLAG_RE = re.compile(r"(?:^|\s)--copy(?:\s|$)")
 # Used with a substring from the end of the add subcommand.
 YES_FLAG_RE = re.compile(r"--yes\b")
 
-# Detect $agent (the loop variable) appearing as a value after --agent.
-# Matches: --agent "$agent", --agent $agent, --agent "$agent" windsurf, etc.
-AGENT_VAR_RE = re.compile(
-    r"--agent\s+(?:"
-    r'"[^"]*\$agent[^"]*"'
-    r"|"
-    r"'[^']*\$agent[^']*'"
-    r"|"
-    r"\S*\$agent\S*"
-    r")"
-)
-
 # Flags known to accept variadic values. Boolean flags (--yes, --global,
 # --copy, --force) are detected by dedicated regexes; the variadic parser
 # only accumulates values for flags in this set.
@@ -98,7 +86,9 @@ def _parse_variadic_options(segment: str) -> dict[str, list[str]]:
     until the next --flag or end of stream — but ONLY for flags listed
     in _VARIADIC_VALUE_FLAGS. Boolean flags (--yes, --global, --copy,
     etc.) are recognised but do not consume following tokens as values.
-    Shell variables (tokens starting with $) are skipped.
+    Shell variable references ($agent, ${agent}) are preserved as-is
+    (with their $ prefix) so callers can distinguish them from literal
+    values.
 
     Returns {flag_name: [values...]} for every --flag that has values.
     """
@@ -119,13 +109,12 @@ def _parse_variadic_options(segment: str) -> dict[str, list[str]]:
 
         # Not a flag — it's a value only if the current flag accepts values.
         if current_flag is not None and current_flag in _VARIADIC_VALUE_FLAGS:
-            # Skip shell variables like $AGENTS or "$agent".
-            if token.startswith("$"):
-                continue
             # Clean up trailing ; or \ (shell separators / continuations).
             token = token.rstrip(";").rstrip("\\")
             # Remove shell quotes.
             token = token.strip('"').strip("'")
+            # Preserve shell variable references ($agent, ${agent}) as-is
+            # so callers can distinguish them from literal values.
             if token:
                 current_values.append(token)
 
@@ -323,8 +312,6 @@ def _extract_add_command(
 
     # Structural: is this command inside a `for agent in $AGENTS` loop?
     block.has_agent_loop = bool(re.search(r"for\s+agent\s+in\s+\$AGENTS", segment))
-    # Intent: does $agent actually appear as a value of --agent?
-    block.uses_agent_variable = bool(AGENT_VAR_RE.search(segment))
 
     block.has_global_flag = bool(GLOBAL_FLAG_RE.search(segment))
     block.has_copy_flag = bool(COPY_FLAG_RE.search(segment))
@@ -334,10 +321,19 @@ def _extract_add_command(
     block.has_yes_flag = bool(YES_FLAG_RE.search(segment[add_end:]))
 
     # Variadic option parsing: --agent and --skill accept multiple values.
-    # literal_agents gets only the non-variable values (e.g. "claude-code",
-    # not "$agent"). Variable refs are detected by uses_agent_variable above.
+    # Shell variable refs ($agent, ${agent}) are preserved so we can
+    # distinguish them from literal agent names.
     opts = _parse_variadic_options(segment)
-    block.literal_agents = [a for a in opts.get("agent", []) if not a.startswith("$")]
+    agent_values = opts.get("agent", [])
+
+    # uses_agent_variable: $agent or ${agent} appears as a --agent value.
+    block.uses_agent_variable = any(
+        v in {"$agent", "${agent}"} for v in agent_values
+    )
+    # literal_agents: non-variable values only.
+    block.literal_agents = [
+        v for v in agent_values if v not in {"$agent", "${agent}"}
+    ]
     # Deduplicate while preserving order.
     seen_agents: set[str] = set()
     deduped_agents: list[str] = []
@@ -506,15 +502,26 @@ def main(
                     f"not npx's --yes)",
                 )
 
-            # 3b. Build the effective agent set for this command.
+            # 3b. Reject $agent used outside a `for agent in $AGENTS` loop.
+            #     $agent is only meaningful inside a loop that defines it.
+            if b.uses_agent_variable and not b.has_agent_loop:
+                report(
+                    errors,
+                    f"install block #{b.block_index} for {decl.name!r} uses "
+                    f"`$agent` in --agent but is not inside a "
+                    f"`for agent in $AGENTS` loop; the variable would be "
+                    f"empty or undefined at runtime",
+                )
+
+            # 3c. Build the effective agent set for this command.
             #     Start with literal agents, then add doc_agents only if
-            #     $agent actually appears in --agent values.
+            #     $agent appears in --agent AND the command is inside a loop.
             cmd_agents = set(b.literal_agents)
-            if b.uses_agent_variable:
+            if b.has_agent_loop and b.uses_agent_variable:
                 if doc_agents:
                     cmd_agents |= doc_agents
 
-            # 3c. Validate every agent in the effective set.
+            # 3d. Validate every agent in the effective set.
             if not cmd_agents:
                 report(
                     errors,

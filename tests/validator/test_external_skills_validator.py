@@ -491,6 +491,42 @@ class ParseAddBlocksTests(unittest.TestCase):
         self.assertTrue(blocks[0].uses_agent_variable)
         self.assertEqual(blocks[0].literal_agents, ["windsurf"])
 
+    def test_agent_variable_without_loop(self) -> None:
+        """--agent "$agent" without a for-loop: uses_agent_variable=True
+        but has_agent_loop=False. The validator must reject this later
+        (checked in main, not in parse_add_blocks)."""
+        body = (
+            "npx --yes skills@latest add test/source --global --copy \\\n"
+            '  --agent "$agent" --skill a --yes'
+        )
+        blocks = self.validator.parse_add_blocks(f"```bash\n{body}\n```\n")
+        self.assertEqual(len(blocks), 1)
+        self.assertFalse(blocks[0].has_agent_loop)
+        self.assertTrue(
+            blocks[0].uses_agent_variable,
+            "$agent in --agent must be detected even without a loop",
+        )
+        self.assertEqual(blocks[0].literal_agents, [])
+
+    def test_literal_before_agent_variable(self) -> None:
+        """--agent claude-code "$agent" inside a loop: variable is the
+        SECOND value, not immediately after --agent. Must still be
+        detected and literal_agents must only contain claude-code."""
+        body = (
+            "for agent in $AGENTS; do \\\n"
+            "  npx --yes skills@latest add test/source --global --copy \\\n"
+            '    --agent claude-code "$agent" --skill a --yes; \\\n'
+            "done"
+        )
+        blocks = self.validator.parse_add_blocks(f"```bash\n{body}\n```\n")
+        self.assertEqual(len(blocks), 1)
+        self.assertTrue(blocks[0].has_agent_loop)
+        self.assertTrue(
+            blocks[0].uses_agent_variable,
+            "$agent as second value after claude-code must be detected",
+        )
+        self.assertEqual(blocks[0].literal_agents, ["claude-code"])
+
 
 class ValidateExternalSkillsRegressionTests(unittest.TestCase):
     """End-to-end regression tests for the per-command + pair-based refactor.
@@ -954,6 +990,46 @@ class ValidateExternalSkillsRegressionTests(unittest.TestCase):
                 f"must pass; got exit={result.returncode}\n{result.stdout}"
             ),
         )
+
+    # ------------------------------------------------------------------
+    # Test 13: $agent outside a for-loop is rejected.
+    #
+    # --agent "$agent" without a `for agent in $AGENTS` loop is invalid
+    # because the variable would be empty/undefined at runtime. The
+    # validator must reject this even though uses_agent_variable=True.
+    # ------------------------------------------------------------------
+    def test_agent_variable_without_loop_is_rejected(self) -> None:
+        mutated_yaml = self._set_yaml_source(
+            self._original_yaml,
+            "ksimback/tech-debt-skill",
+            selection=["tech-debt-audit"],
+            agents=["claude-code", "codex", "opencode", "cursor"],
+            claude_code_only=False,
+        )
+        mutated_doc = self._original_doc
+        mutated_doc = mutated_doc.replace(
+            "**33 skills installed for `claude-code`; 32 for `codex`",
+            "**33 skills installed for `claude-code`; 33 for `codex`",
+            1,
+        )
+        # Standalone command with --agent "$agent" — no for-loop anywhere.
+        new_body = (
+            "npx --yes skills@latest add ksimback/tech-debt-skill --global --copy \\\n"
+            '  --agent "$agent" --skill tech-debt-audit --yes'
+        )
+        mutated_doc = self._replace_block(mutated_doc, new_body)
+        with _CopyFixture(mutated_doc=mutated_doc, mutated_yaml=mutated_yaml) as fx:
+            result = fx.run_validator()
+        self.assertEqual(
+            result.returncode,
+            1,
+            msg=(
+                "$agent without a for-loop must be rejected; "
+                f"got exit={result.returncode}\n{result.stdout}"
+            ),
+        )
+        self.assertIn("$agent", result.stdout)
+        self.assertIn("not inside", result.stdout)
 
 
 if __name__ == "__main__":
