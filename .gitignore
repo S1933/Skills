@@ -1,6 +1,9 @@
-.local/*
-!.local/README.md
-!.local/skills-environment.example.yaml
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.swp
+*~
 
+# Python (kept for codex/tests if reintroduced)
 __pycache__/
 *.py[cod]
