@@ -23,10 +23,14 @@ definitive result:
    default visible from `origin/HEAD`; if still ambiguous, ask before reviewing.
 
 After selecting the base, run a separate unpushed-commits check — this is
-not a base-selection step and must not gate the review:
+not a base-selection step and must not gate the review. Only run this when
+a tracking branch exists (skip on detached HEAD or branches without an
+upstream):
 
 ```
-git rev-list @{upstream}..HEAD --count
+git rev-parse --abbrev-ref @{upstream} >/dev/null 2>&1 \
+  && git rev-list @{upstream}..HEAD --count \
+  || echo "no upstream configured — skipping unpushed check"
 ```
 
 If the count is non-zero, warn the reviewer that commits have not been pushed;
@@ -34,7 +38,7 @@ the review should still proceed against the selected base.
 
 Legacy heuristic (first existing of `develop` → `origin/develop` → `main` →
 `origin/main`) should only be used as the final fallback, and only after
-checking for an explicit base, a PR base, and the branch's upstream. Prefer the
+checking for an explicit base and a PR base. Prefer the
 remote (`origin/main`, `origin/develop`) over a possibly stale local branch so an
 obsolete local `develop` is not mistaken for the real base.
 

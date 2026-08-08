@@ -4,7 +4,7 @@
 # through `npx skills` (see docs/migration-npx.md for the install procedure).
 #
 # This catalogue's own validators and size limits cover only the 15 skills
-# maintained in this repository. This file makes the 20 external skills, and
+# maintained in this repository. This file makes the 22 external skills, and
 # their upstream provenance, explicit and auditable so that upstream changes
 # remain visible instead of arriving silently.
 #
@@ -110,7 +110,7 @@ maintained_locally:
 
 # Install policy
 policy:
-  # Replay the four `add` commands in docs/migration-npx.md rather than a bare
+  # Replay the six `add` commands in docs/migration-npx.md rather than a bare
   # `update --global`, so only the declared selection is refreshed.
   update: "replay-declared-add"
   # Record verified_commit/verified_at here after each review of upstream.

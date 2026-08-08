@@ -38,7 +38,7 @@ npx --yes skills@latest list --global --json > skills-before-migration.json
 
 ## 3. Remove the old copies
 
-Removal is limited to the 37 names historically versioned in `S1933/skills`.
+Removal is limited to the 38 names historically versioned in `S1933/skills`.
 A skill that is absent is simply ignored.
 
 The `--agent` value selects the target agent store. The catalogue targets the
@@ -54,7 +54,7 @@ AGENTS="claude-code codex opencode cursor"
 for agent in $AGENTS; do \
   npx --yes skills@latest remove --global \
     --agent "$agent" \
-    --skill brainstorming --skill codebase-design \
+    --skill brainstorming --skill caveman --skill codebase-design \
     --skill decision-mapping --skill design-an-interface \
     --skill dispatching-parallel-agents --skill domain-modeling \
     --skill executing-plans --skill finishing-a-development-branch \
@@ -172,8 +172,9 @@ Check notably for the presence of:
   agents, by design);
 - `repository-reconnaissance`, `review-scope` and `[REMOVED-INTERNAL-SKILL]`.
 
-`claude-code` should show **33** skills; `codex`, `opencode`, and `cursor` should
-each show **32** (the difference is the Claude-Code-only `tech-debt-audit`).
+`claude-code` should show **33** skills added by this migration; `codex`,
+`opencode`, and `cursor` should each show **32** (the difference is the
+Claude-Code-only `tech-debt-audit`).
 
 ## Later updates
 
@@ -196,9 +197,11 @@ counts (33 / 32 / 32 / 32) — `update` does not introduce `tech-debt-audit`
 on non-claude-code agents.
 
 Re-run the six `add` commands if the declared selection changes or if a skill
-is renamed upstream. For a reproducible, auditable install, record the pinned
-upstream commit in `external-skills.yaml` and re-install from that commit rather
-than from the moving default branch.
+is renamed upstream. The `verified_commit` fields in `external-skills.yaml`
+record the upstream revision at the time of the last audit; they are not a
+reproducibility mechanism (the CLI installs from the default branch, and
+`owner/repo#SHA` is not supported). For a truly immutable install, pin a
+local checkout at the audited commit.
 
 ## Voluntary exclusions
 
