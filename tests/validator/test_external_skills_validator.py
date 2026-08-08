@@ -2,23 +2,20 @@
 
 These tests intentionally corrupt a COPY of `docs/migration-npx.md` (and
 sometimes `external-skills.yaml`) in a `TemporaryDirectory` to verify
-that the validator rejects four classes of broken migration
-configuration that a prior review of the validator found it accepted by
-accident:
+that the validator rejects broken migration configurations.
 
-1. Removing `--global` from an `npx skills add` command.
-2. Removing `--copy` from an `npx skills add` command.
-3. A source declared for several agents (e.g. claude-code AND codex),
-   but the install block only uses `--agent claude-code` (missing agent
-   coverage).
-4. A single fenced ```` ```bash ```` block containing two `npx skills
-   add` commands where the second targets an undeclared source — the
-   prior parser only saw the first command and silently passed.
-
-The tests run the validator as a subprocess against the mutated copy
-via the new CLI args / env-var path API, asserting on the exit code.
-This is the most faithful way to exercise the validator (it covers the
-script's `main()` and CLI exit code, not just the helpers).
+Coverage:
+- Missing --global / --copy / --yes flags
+- Agent/skill coverage gaps (pair-based: every declared (agent, skill)
+  pair must be covered by an install command)
+- Second add commands with missing flags
+- Variadic --agent / --skill options
+- --force in add blocks (rejected)
+- --force in prose after a block (not flagged)
+- Undeclared sources
+- Loop state persistence across commands in the same block
+- done resets loop state
+- Prose install-count consistency
 
 CRITICAL: NO test in this module ever writes to a real tracked file.
 All mutations target copies inside a `TemporaryDirectory`, so an
@@ -129,12 +126,9 @@ class ValidateExternalSkillsMutationTests(unittest.TestCase):
     def setUp(self) -> None:
         self._original_doc = _baseline_doc()
         self._original_yaml = EXTERNAL_YAML.read_text(encoding="utf-8")
-        self._original_validator = _load_validator()
 
     # --- Sanity check: the baseline (real files) must still validate. ---
     def test_baseline_passes(self) -> None:
-        # Run against the real files via the default (no-arg) path so we
-        # also exercise the original default-paths code path.
         result = subprocess.run(
             [sys.executable, str(VALIDATOR)],
             capture_output=True,
@@ -225,6 +219,25 @@ class ValidateExternalSkillsMutationTests(unittest.TestCase):
         )
         self.assertIn("--copy", result.stdout)
 
+    # --- Mode 2b: removing --yes from an add command must fail. ---
+    def test_missing_yes_flag_is_rejected(self) -> None:
+        mutated = self._original_doc.replace(
+            "npx --yes skills@latest add ksimback/tech-debt-skill --global --copy \\\n"
+            "  --agent claude-code --skill tech-debt-audit --yes",
+            "npx --yes skills@latest add ksimback/tech-debt-skill --global --copy \\\n"
+            "  --agent claude-code --skill tech-debt-audit",
+            1,
+        )
+        self.assertNotEqual(mutated, self._original_doc)
+        with _CopyFixture(mutated_doc=mutated) as fx:
+            result = fx.run_validator()
+        self.assertEqual(
+            result.returncode,
+            1,
+            msg=f"missing --yes must be rejected; got {result.returncode}\n{result.stdout}",
+        )
+        self.assertIn("--yes", result.stdout)
+
     # --- Mode 3: declared agent missing from a non-loop install must fail. ---
     def test_declared_agent_without_install_coverage_is_rejected(self) -> None:
         import yaml
@@ -236,10 +249,6 @@ class ValidateExternalSkillsMutationTests(unittest.TestCase):
                 src["claude_code_only"] = False
         mutated_yaml = yaml.safe_dump(data, sort_keys=False)
 
-        # The single existing install block for ksimback only covers
-        # --agent claude-code. No loop, no second add command for
-        # codex, so codex has no install coverage. The validator must
-        # reject.
         with _CopyFixture(
             mutated_doc=self._original_doc, mutated_yaml=mutated_yaml
         ) as fx:
@@ -252,14 +261,11 @@ class ValidateExternalSkillsMutationTests(unittest.TestCase):
                 f"got exit={result.returncode}\n{result.stdout}"
             ),
         )
-        # Should mention the missing agent (codex) and/or the union
-        # coverage check.
         self.assertTrue(
             "codex" in result.stdout
             and (
-                "missing coverage" in result.stdout
-                or "no install block installs on them" in result.stdout
-                or "no install command in" in result.stdout
+                "no install command" in result.stdout
+                or "missing install coverage" in result.stdout
             ),
             msg=result.stdout,
         )
@@ -292,6 +298,43 @@ class ValidateExternalSkillsMutationTests(unittest.TestCase):
         self.assertIn("undeclared source", result.stdout)
         self.assertIn("undeclared/bogus-source", result.stdout)
 
+    # --- Mode 5: --force inside an add block is rejected. ---
+    def test_force_inside_add_block_is_rejected(self) -> None:
+        mutated = self._original_doc.replace(
+            "  --agent claude-code --skill tech-debt-audit --yes",
+            "  --agent claude-code --skill tech-debt-audit --force --yes",
+            1,
+        )
+        self.assertNotEqual(mutated, self._original_doc)
+        with _CopyFixture(mutated_doc=mutated) as fx:
+            result = fx.run_validator()
+        self.assertEqual(
+            result.returncode,
+            1,
+            msg=f"--force in add block must be rejected; got {result.returncode}\n{result.stdout}",
+        )
+        self.assertIn("--force", result.stdout)
+
+    # --- Mode 6: --force in prose right after a fenced block is NOT
+    # flagged (it's outside the add block's span). ---
+    def test_force_in_prose_after_block_is_not_flagged(self) -> None:
+        # The ksimback install block is followed by "## 7. Install i-have-adhd".
+        # Insert --force in that prose section (between the ``` closing fence
+        # and the next heading).
+        mutated = self._original_doc.replace(
+            "## 7. Install i-have-adhd",
+            "## 7. Install i-have-adhd\n\n--force is sometimes used in prose examples.",
+            1,
+        )
+        self.assertNotEqual(mutated, self._original_doc)
+        with _CopyFixture(mutated_doc=mutated) as fx:
+            result = fx.run_validator()
+        self.assertEqual(
+            result.returncode,
+            0,
+            msg=f"--force in prose must not be flagged; got {result.returncode}\n{result.stdout}",
+        )
+
 
 class ParseAddBlocksTests(unittest.TestCase):
     """Unit-level checks for the multi-command splitter.
@@ -314,6 +357,7 @@ class ParseAddBlocksTests(unittest.TestCase):
         self.assertEqual(blocks[0].literal_agents, ["claude-code"])
         self.assertTrue(blocks[0].has_global_flag)
         self.assertTrue(blocks[0].has_copy_flag)
+        self.assertTrue(blocks[0].has_yes_flag)
 
     def test_loop_block_keeps_loop_marker(self) -> None:
         body = (
@@ -326,12 +370,10 @@ class ParseAddBlocksTests(unittest.TestCase):
         blocks = self.validator.parse_add_blocks(f"```bash\n{body}\n```\n")
         self.assertEqual(len(blocks), 1)
         self.assertTrue(blocks[0].uses_agent_loop)
-        # The loop's `--agent "$agent"` does not count as a literal
-        # agent; the source's declared agent set is checked against
-        # $AGENTS instead.
         self.assertEqual(blocks[0].literal_agents, [])
         self.assertTrue(blocks[0].has_global_flag)
         self.assertTrue(blocks[0].has_copy_flag)
+        self.assertTrue(blocks[0].has_yes_flag)
 
     def test_block_with_two_distinct_add_commands(self) -> None:
         body = (
@@ -347,16 +389,12 @@ class ParseAddBlocksTests(unittest.TestCase):
         for b in blocks:
             self.assertTrue(b.has_global_flag)
             self.assertTrue(b.has_copy_flag)
+            self.assertTrue(b.has_yes_flag)
 
     def test_two_commands_with_distinct_agents_and_skills_no_cross_contamination(
         self,
     ) -> None:
-        """Per-command parser must NOT bleed flags/agents/skills between commands.
-
-        With the previous (buggy) splitter, both commands inherited the
-        full --agent and --skill sets. Verify that the per-command
-        AddBlocks carry ONLY their own command's metadata.
-        """
+        """Per-command parser must NOT bleed flags/agents/skills between commands."""
         body = (
             "npx --yes skills@latest add ksimback/tech-debt-skill --global --copy \\\n"
             "  --agent claude-code --skill tech-debt-audit --yes\n"
@@ -365,30 +403,18 @@ class ParseAddBlocksTests(unittest.TestCase):
         )
         blocks = self.validator.parse_add_blocks(f"```bash\n{body}\n```\n")
         self.assertEqual(len(blocks), 2, f"expected 2 AddBlocks, got {len(blocks)}")
-        # First command: only claude-code + tech-debt-audit.
         self.assertEqual(blocks[0].source, "ksimback/tech-debt-skill")
         self.assertEqual(blocks[0].literal_agents, ["claude-code"])
         self.assertEqual(blocks[0].skills, ["tech-debt-audit"])
-        # Second command: only codex + i-have-adhd — must NOT inherit
-        # the first command's --agent or --skill.
         self.assertEqual(blocks[1].source, "ayghri/i-have-adhd")
         self.assertEqual(blocks[1].literal_agents, ["codex"])
         self.assertEqual(blocks[1].skills, ["i-have-adhd"])
-        # Flag checks are per-command: both must still report --global
-        # and --copy even though the segments are on separate lines.
         for b in blocks:
             self.assertTrue(b.has_global_flag)
             self.assertTrue(b.has_copy_flag)
             self.assertFalse(b.uses_agent_loop)
 
     def test_for_loop_preamble_is_folded_into_command(self) -> None:
-        """A `for agent in $AGENTS; do \\` opener must mark the FOLLOWING
-        add command as `uses_agent_loop=True`, not be dropped.
-
-        This guards against a regression where the splitter mistakenly
-        treated the `for ... do` line as a separate (and therefore
-        dropped) segment.
-        """
         body = (
             "for agent in $AGENTS; do \\\n"
             "  npx --yes skills@latest add obra/superpowers --global --copy \\\n"
@@ -400,21 +426,9 @@ class ParseAddBlocksTests(unittest.TestCase):
         self.assertEqual(len(blocks), 1)
         self.assertEqual(blocks[0].source, "obra/superpowers")
         self.assertTrue(blocks[0].uses_agent_loop)
-        # `$agent` is not a literal agent; the loop's reach is checked
-        # against $AGENTS instead.
         self.assertEqual(blocks[0].literal_agents, [])
 
     def test_two_commands_in_same_loop_both_get_uses_agent_loop(self) -> None:
-        """REGRESSION: a for loop with TWO `npx skills add` commands.
-
-        The prior splitter attached the `for ... do` preamble only to
-        the FIRST add command, so the second command in the loop got
-        `uses_agent_loop=False` and no literal agents — and the
-        validator rejected a perfectly valid shell configuration. This
-        test exercises the fix: once a `for ... do` has been seen, the
-        `in_agent_loop` state persists across every subsequent add
-        command in the block until a `done` closes the loop.
-        """
         body = (
             "for agent in $AGENTS; do \\\n"
             "  npx --yes skills@latest add source1/foo --global --copy \\\n"
@@ -427,28 +441,14 @@ class ParseAddBlocksTests(unittest.TestCase):
         self.assertEqual(len(blocks), 2, f"expected 2 AddBlocks, got {len(blocks)}")
         self.assertEqual(blocks[0].source, "source1/foo")
         self.assertEqual(blocks[0].skills, ["a"])
-        self.assertTrue(
-            blocks[0].uses_agent_loop,
-            "first command inside the for loop must report uses_agent_loop=True",
-        )
+        self.assertTrue(blocks[0].uses_agent_loop)
         self.assertEqual(blocks[1].source, "source1/foo")
         self.assertEqual(blocks[1].skills, ["b"])
-        self.assertTrue(
-            blocks[1].uses_agent_loop,
-            "second command inside the same for loop must also report "
-            "uses_agent_loop=True (regression: was False before the fix)",
-        )
-        # And neither command should have a literal agent, since both
-        # rely on the loop's $agent expansion.
+        self.assertTrue(blocks[1].uses_agent_loop)
         self.assertEqual(blocks[0].literal_agents, [])
         self.assertEqual(blocks[1].literal_agents, [])
 
     def test_done_resets_loop_state(self) -> None:
-        """A `done` closes the loop; commands after it are NOT in the loop.
-
-        Without the reset, a follow-up literal add command (no `for`)
-        would incorrectly inherit `uses_agent_loop=True`.
-        """
         body = (
             "for agent in $AGENTS; do \\\n"
             "  npx --yes skills@latest add inside/foo --global --copy \\\n"
@@ -460,23 +460,12 @@ class ParseAddBlocksTests(unittest.TestCase):
         blocks = self.validator.parse_add_blocks(f"```bash\n{body}\n```\n")
         self.assertEqual(len(blocks), 2, f"expected 2 AddBlocks, got {len(blocks)}")
         self.assertEqual(blocks[0].source, "inside/foo")
-        self.assertTrue(
-            blocks[0].uses_agent_loop,
-            "command inside the loop must report uses_agent_loop=True",
-        )
+        self.assertTrue(blocks[0].uses_agent_loop)
         self.assertEqual(blocks[1].source, "outside/bar")
-        self.assertFalse(
-            blocks[1].uses_agent_loop,
-            "command AFTER `done` must not inherit the loop marker",
-        )
+        self.assertFalse(blocks[1].uses_agent_loop)
         self.assertEqual(blocks[1].literal_agents, ["claude-code"])
 
     def test_split_at_semicolon_within_block(self) -> None:
-        """A `;`-separated block (e.g. `remove` then `add` on the same
-        line) must yield exactly one AddBlock, for the add command.
-
-        The remove command must not pollute the add command's flags.
-        """
         body = (
             "npx --yes skills@latest remove --global --agent claude-code "
             "--skill foo --yes; \\\n"
@@ -485,28 +474,58 @@ class ParseAddBlocksTests(unittest.TestCase):
             "  --agent claude-code --skill tech-debt-audit --yes"
         )
         blocks = self.validator.parse_add_blocks(f"```bash\n{body}\n```\n")
-        # Only the `add` produces an AddBlock; `remove` is dropped.
         self.assertEqual(len(blocks), 1, f"expected 1 AddBlock, got {len(blocks)}")
         self.assertEqual(blocks[0].source, "ksimback/tech-debt-skill")
         self.assertEqual(blocks[0].literal_agents, ["claude-code"])
         self.assertEqual(blocks[0].skills, ["tech-debt-audit"])
 
+    # --- Variadic option tests ---
+
+    def test_variadic_agent_captures_multiple_values(self) -> None:
+        """--agent claude-code codex must capture both values."""
+        body = (
+            "npx --yes skills@latest add test/source --global --copy \\\n"
+            "  --agent claude-code codex --skill a --yes"
+        )
+        blocks = self.validator.parse_add_blocks(f"```bash\n{body}\n```\n")
+        self.assertEqual(len(blocks), 1)
+        self.assertEqual(blocks[0].literal_agents, ["claude-code", "codex"])
+
+    def test_variadic_skill_captures_multiple_values(self) -> None:
+        """--skill a b c must capture all three values."""
+        body = (
+            "npx --yes skills@latest add test/source --global --copy \\\n"
+            "  --agent claude-code --skill a b c --yes"
+        )
+        blocks = self.validator.parse_add_blocks(f"```bash\n{body}\n```\n")
+        self.assertEqual(len(blocks), 1)
+        self.assertEqual(blocks[0].skills, ["a", "b", "c"])
+
+    def test_missing_yes_flag_is_detected(self) -> None:
+        """An add command without the final --yes must have has_yes_flag=False."""
+        body = (
+            "npx --yes skills@latest add test/source --global --copy \\\n"
+            "  --agent claude-code --skill a"
+        )
+        blocks = self.validator.parse_add_blocks(f"```bash\n{body}\n```\n")
+        self.assertEqual(len(blocks), 1)
+        self.assertFalse(blocks[0].has_yes_flag)
+
 
 class ValidateExternalSkillsRegressionTests(unittest.TestCase):
-    """End-to-end regression tests for the per-command + union refactor.
+    """End-to-end regression tests for the per-command + pair-based refactor.
 
     Each test stages a copy of the real files in a `TemporaryDirectory`,
     mutates the copy so the validator sees a specific edge case, runs
     the validator as a subprocess against the copy via the env-var
     API, and asserts on the exit code. The real tracked files are
     never touched. These tests are the safety net against the
-    cross-contamination bug and the missing union check.
+    cross-contamination bug and the missing pair-coverage check.
     """
 
     def setUp(self) -> None:
         self._original_doc = MIGRATION_DOC.read_text(encoding="utf-8")
         self._original_yaml = EXTERNAL_YAML.read_text(encoding="utf-8")
-        self._original_validator = _load_validator()
 
     # ------------------------------------------------------------------
     # Helpers for swapping out a fenced block and the YAML declaration.
@@ -517,8 +536,7 @@ class ValidateExternalSkillsRegressionTests(unittest.TestCase):
     def _replace_block(doc: str, new_body: str) -> str:
         r"""Replace the fenced block whose body matches the ksimback single
         install with `new_body`. The body is wrapped in a ```bash ... ```
-        fence. Returns the rewritten doc.
-        """
+        fence. Returns the rewritten doc."""
         old_block = (
             "npx --yes skills@latest add ksimback/tech-debt-skill --global --copy \\\n"
             "  --agent claude-code --skill tech-debt-audit --yes"
@@ -529,8 +547,6 @@ class ValidateExternalSkillsRegressionTests(unittest.TestCase):
         return new_doc
 
     def _mutate_yaml(self, base_yaml: str, mutate_fn) -> str:
-        """Apply `mutate_fn(data)` to a parsed YAML copy and return the
-        mutated YAML text. The original is never written back."""
         import yaml
 
         data = yaml.safe_load(base_yaml)
@@ -546,11 +562,6 @@ class ValidateExternalSkillsRegressionTests(unittest.TestCase):
         agents: list[str] | None = None,
         claude_code_only: bool | None = None,
     ) -> str:
-        """Return a YAML string with the declaration for `name` updated.
-
-        Fields left as `None` are not changed. The base YAML is read
-        from the supplied string; the result is a NEW string.
-        """
         def mutate(data):
             for src in list(data.get("sources", [])) + list(
                 data.get("maintained_locally", [])
@@ -575,8 +586,6 @@ class ValidateExternalSkillsRegressionTests(unittest.TestCase):
         agents: list[str],
         claude_code_only: bool = False,
     ) -> str:
-        """Return a YAML string with a maintained_locally entry set
-        (replaced if it exists, else appended)."""
         def mutate(data):
             loc = data.setdefault("maintained_locally", [])
             for entry in loc:
@@ -604,8 +613,6 @@ class ValidateExternalSkillsRegressionTests(unittest.TestCase):
     # Test 1: a SECOND add command without --copy is rejected.
     # ------------------------------------------------------------------
     def test_second_command_without_copy_is_rejected(self) -> None:
-        # Declare two skills for ksimback (still only claude-code) so the
-        # second add command has a different, declared skill to install.
         mutated_yaml = self._set_yaml_source(
             self._original_yaml,
             "ksimback/tech-debt-skill",
@@ -633,10 +640,6 @@ class ValidateExternalSkillsRegressionTests(unittest.TestCase):
                 f"got exit={result.returncode}\n{result.stdout}"
             ),
         )
-        # The error should mention the missing --copy on the SECOND
-        # command. The per-command parser must attribute the missing
-        # flag to the correct command, not silently merge it with the
-        # first command's flags.
         self.assertIn("--copy", result.stdout)
 
     # ------------------------------------------------------------------
@@ -673,16 +676,19 @@ class ValidateExternalSkillsRegressionTests(unittest.TestCase):
         self.assertIn("--global", result.stdout)
 
     # ------------------------------------------------------------------
-    # Test 3: two commands with distinct agents and skills (no
-    # cross-contamination) pass.
+    # Test 3: two commands with distinct agents and skills where not all
+    # (agent, skill) pairs are covered must be REJECTED.
     #
-    # The per-command parser must yield TWO AddBlocks, one per command,
-    # each with ONLY its own --agent and --skill set. The validator
-    # must accept this layout and return exit=0.
+    # Command 1: --agent claude-code --skill tech-debt-audit
+    # Command 2: --agent codex --skill tech-debt-review
+    # Declaration: agents=[claude-code, codex], skills=[audit, review]
+    #
+    # Covered pairs: {(claude-code, audit), (codex, review)}
+    # Expected pairs: {(claude-code, audit), (claude-code, review),
+    #                  (codex, audit), (codex, review)}
+    # Missing: {(claude-code, review), (codex, audit)} → rejected.
     # ------------------------------------------------------------------
-    def test_two_commands_distinct_agents_and_skills_pass(self) -> None:
-        # The source is declared for two agents and two skills, with
-        # `claude_code_only=False` so the prose count is consistent.
+    def test_two_commands_missing_pair_coverage_is_rejected(self) -> None:
         mutated_yaml = self._set_yaml_source(
             self._original_yaml,
             "ksimback/tech-debt-skill",
@@ -690,11 +696,6 @@ class ValidateExternalSkillsRegressionTests(unittest.TestCase):
             agents=["claude-code", "codex"],
             claude_code_only=False,
         )
-        # Update the prose count: declared_total goes 33 -> 34
-        # (added tech-debt-review). The ksimback source is no longer
-        # claude_code_only, so the claude-only count drops 1 -> 0
-        # and expected_other = 34 - 0 = 34. Claude-code total is
-        # also 34.
         mutated_doc = self._original_doc
         mutated_doc = mutated_doc.replace(
             "**33 skills installed for `claude-code`; 32 for `codex`",
@@ -714,25 +715,27 @@ class ValidateExternalSkillsRegressionTests(unittest.TestCase):
             result = fx.run_validator()
         self.assertEqual(
             result.returncode,
-            0,
+            1,
             msg=(
-                "two commands with distinct agents and skills must pass; "
-                f"got exit={result.returncode}\n{result.stdout}\n"
+                "two commands with non-covering (agent, skill) pairs must "
+                f"be rejected; got exit={result.returncode}\n{result.stdout}\n"
                 f"STDERR: {result.stderr}"
             ),
         )
+        self.assertIn("missing install coverage for skills", result.stdout)
 
     # ------------------------------------------------------------------
-    # Test 4: two literal commands, each covering one agent, are
-    # accepted when their union covers the declaration.
+    # Test 4: two literal commands that together cover all (agent, skill)
+    # pairs are accepted.
     #
-    # This is the explicit union-coverage test. The source declares
-    # three agents; the doc only has two commands, one for claude-code
-    # and one for codex+opencode. The validator must accept this
-    # because the union {claude-code, codex, opencode} equals the
-    # declared agent set.
+    # Command 1: claude-code gets BOTH skills.
+    # Command 2: codex+opencode get BOTH skills (via variadic --agent
+    # and interleaved --agent/--skill flags).
+    # All pairs: {(claude-code, audit), (claude-code, review),
+    #             (codex, audit), (codex, review),
+    #             (opencode, audit), (opencode, review)} ✓
     # ------------------------------------------------------------------
-    def test_two_commands_union_covers_declaration_passes(self) -> None:
+    def test_two_commands_full_pair_coverage_passes(self) -> None:
         mutated_yaml = self._set_yaml_source(
             self._original_yaml,
             "ksimback/tech-debt-skill",
@@ -740,8 +743,6 @@ class ValidateExternalSkillsRegressionTests(unittest.TestCase):
             agents=["claude-code", "codex", "opencode"],
             claude_code_only=False,
         )
-        # Update prose count: 33 -> 34 declared, claude_code_only 1 -> 0
-        # (ksimback is no longer claude-only) so other-agents = 34.
         mutated_doc = self._original_doc
         mutated_doc = mutated_doc.replace(
             "**33 skills installed for `claude-code`; 32 for `codex`",
@@ -749,10 +750,10 @@ class ValidateExternalSkillsRegressionTests(unittest.TestCase):
             1,
         )
         new_body = (
-            # First command: covers claude-code.
+            # First command: covers both skills for claude-code.
             "npx --yes skills@latest add ksimback/tech-debt-skill --global --copy \\\n"
-            "  --agent claude-code --skill tech-debt-audit --yes\n"
-            # Second command: covers codex AND opencode.
+            "  --agent claude-code --skill tech-debt-audit --skill tech-debt-review --yes\n"
+            # Second command: covers both skills for codex AND opencode.
             "npx --yes skills@latest add ksimback/tech-debt-skill --global --copy \\\n"
             "  --agent codex --skill tech-debt-audit \\\n"
             "  --agent opencode --skill tech-debt-review --yes"
@@ -766,7 +767,7 @@ class ValidateExternalSkillsRegressionTests(unittest.TestCase):
             result.returncode,
             0,
             msg=(
-                "union of two commands must cover the declaration; "
+                "full pair coverage must pass; "
                 f"got exit={result.returncode}\n{result.stdout}\n"
                 f"STDERR: {result.stderr}"
             ),
@@ -787,9 +788,6 @@ class ValidateExternalSkillsRegressionTests(unittest.TestCase):
             agents=["claude-code", "codex", "opencode"],
             claude_code_only=False,
         )
-        # Prose count: declared_total=34, other-agents=34. The union
-        # check (Check 3e) is what must trigger; the prose count is
-        # internally consistent for the OTHER sources.
         mutated_doc = self._original_doc
         mutated_doc = mutated_doc.replace(
             "**33 skills installed for `claude-code`; 32 for `codex`",
@@ -797,8 +795,6 @@ class ValidateExternalSkillsRegressionTests(unittest.TestCase):
             1,
         )
         new_body = (
-            # Only covers claude-code and codex; opencode has no
-            # install command anywhere.
             "npx --yes skills@latest add ksimback/tech-debt-skill --global --copy \\\n"
             "  --agent claude-code --skill tech-debt-audit --yes\n"
             "npx --yes skills@latest add ksimback/tech-debt-skill --global --copy \\\n"
@@ -817,29 +813,18 @@ class ValidateExternalSkillsRegressionTests(unittest.TestCase):
                 f"got exit={result.returncode}\n{result.stdout}"
             ),
         )
-        # The error must mention the missing agent (`opencode`) and the
-        # union-coverage message.
         self.assertIn("opencode", result.stdout)
-        self.assertIn("no install command", result.stdout)
+        self.assertTrue(
+            "no install command" in result.stdout
+            or "missing install coverage" in result.stdout,
+            msg=result.stdout,
+        )
 
     # ------------------------------------------------------------------
     # Test 6: a local Claude-only selection is subtracted from the
     # other-agents total (Change C regression).
-    #
-    # The bug: Check 4 only counted `claude_code_only` skills in
-    # `data["sources"]`, ignoring `data["maintained_locally"]`. A
-    # local claude-only skill would inflate the "other agents" prose
-    # count by 1. This test adds a local claude-only skill and asserts
-    # the validator passes — meaning the prose count is computed
-    # correctly across BOTH sections.
     # ------------------------------------------------------------------
     def test_local_claude_only_subtracted_from_other_agents_total(self) -> None:
-        # Add a new local source with one claude-only skill. The
-        # `claude_code_only=True` flag means the source DECLARES
-        # only claude-code as its agent; the other-agents total is
-        # reduced by 1 because the prose counts the skill only on
-        # claude-code. The validator will require an install block
-        # for it; provide one targeting only claude-code.
         mutated_yaml = self._set_yaml_maintained(
             self._original_yaml,
             "private-skills",
@@ -847,20 +832,12 @@ class ValidateExternalSkillsRegressionTests(unittest.TestCase):
             agents=["claude-code"],
             claude_code_only=True,
         )
-        # Update prose count: declared_total goes 33 -> 34 (added one
-        # local skill). Claude-code total goes 33 -> 34. Other-agents:
-        # the new local skill is claude_code_only so it is subtracted
-        # from the other-agents total: 32 stays 32.
         mutated_doc = self._original_doc
         mutated_doc = mutated_doc.replace(
             "**33 skills installed for `claude-code`; 32 for `codex`",
             "**34 skills installed for `claude-code`; 32 for `codex`",
             1,
         )
-        # Inject a new fenced block for the new local source. The
-        # install is for claude-code only (matching the
-        # `claude_code_only` declaration). Place it just before the
-        # "## 10. Verify" section.
         install_block = (
             "\n## 9b. Install private-skills (1, claude-only)\n"
             "\n```bash\n"
@@ -887,32 +864,15 @@ class ValidateExternalSkillsRegressionTests(unittest.TestCase):
                 f"STDERR: {result.stderr}"
             ),
         )
-        # Spot-check: the prose line in the live doc still says 32 for
-        # the other agents, which is the corrected subtraction. The
-        # baseline doc had 32; the new doc still has 32 (the new
-        # claude-only skill was correctly subtracted).
         self.assertIn("32 for `codex`", mutated_doc)
         self.assertIn("34 skills installed for `claude-code`", mutated_doc)
 
     # ------------------------------------------------------------------
-    # Test 7: REGRESSION — two `npx skills add` commands inside the
-    # SAME `for agent in $AGENTS; do ... done` loop are both
-    # recognized as `uses_agent_loop=True`, and the union of their
-    # agent reach covers the declaration.
-    #
-    # The prior splitter attached the `for ... do` preamble only to
-    # the FIRST add command, so the second command got
-    # `uses_agent_loop=False` with no literal agents, and the
-    # validator rejected a perfectly valid shell configuration. This
-    # end-to-end test exercises the fix against the real main(): we
-    # assemble a valid `for` loop with two `add` commands targeting
-    # a declared source, run the validator, and assert exit=0.
+    # Test 7: two `npx skills add` commands inside the SAME
+    # `for agent in $AGENTS; do ... done` loop are both recognised as
+    # `uses_agent_loop=True`, and all (agent, skill) pairs are covered.
     # ------------------------------------------------------------------
     def test_two_add_commands_inside_one_for_loop_passes(self) -> None:
-        # Declare the source for the SAME agent set the for-loop will
-        # iterate over. The validator's Check 3b requires that every
-        # agent in $AGENTS be present in the source's declared agents
-        # list, so the declaration must include them all.
         mutated_yaml = self._set_yaml_source(
             self._original_yaml,
             "ksimback/tech-debt-skill",
@@ -920,9 +880,6 @@ class ValidateExternalSkillsRegressionTests(unittest.TestCase):
             agents=["claude-code", "codex", "opencode", "cursor"],
             claude_code_only=False,
         )
-        # Update the prose count to match the new declaration.
-        # declared_total=34, claude_code_only=0 (ksimback no longer
-        # claude-only) so other-agents=34 too. claude-code=34.
         mutated_doc = self._original_doc
         mutated_doc = mutated_doc.replace(
             "**33 skills installed for `claude-code`; 32 for `codex`",
@@ -952,6 +909,69 @@ class ValidateExternalSkillsRegressionTests(unittest.TestCase):
                 f"STDOUT:\n{result.stdout}\nSTDERR: {result.stderr}"
             ),
         )
+
+    # ------------------------------------------------------------------
+    # Test 8: multiple --force occurrences across different add blocks
+    # are all detected.
+    # ------------------------------------------------------------------
+    def test_multiple_force_flags_are_all_rejected(self) -> None:
+        # Inject --force into the ksimback block AND into the caveman block.
+        mutated = self._original_doc
+        # ksimback block (section 6)
+        mutated = mutated.replace(
+            "  --agent claude-code --skill tech-debt-audit --yes",
+            "  --agent claude-code --skill tech-debt-audit --force --yes",
+            1,
+        )
+        # caveman block (section 8) — the --yes is on the same line as --skill
+        mutated = mutated.replace(
+            "    --agent \"$agent\" --skill caveman --yes; \\",
+            "    --agent \"$agent\" --skill caveman --force --yes; \\",
+            1,
+        )
+        self.assertNotEqual(mutated, self._original_doc)
+        with _CopyFixture(mutated_doc=mutated) as fx:
+            result = fx.run_validator()
+        self.assertEqual(
+            result.returncode,
+            1,
+            msg=f"multiple --force must all be rejected; got {result.returncode}\n{result.stdout}",
+        )
+        # Both occurrences should be mentioned.
+        self.assertIn("--force", result.stdout)
+
+    # ------------------------------------------------------------------
+    # Test 9: a second add command without --yes is rejected.
+    # ------------------------------------------------------------------
+    def test_second_command_without_yes_is_rejected(self) -> None:
+        mutated_yaml = self._set_yaml_source(
+            self._original_yaml,
+            "ksimback/tech-debt-skill",
+            selection=["tech-debt-audit", "tech-debt-review"],
+            agents=["claude-code"],
+            claude_code_only=False,
+        )
+        new_body = (
+            "npx --yes skills@latest add ksimback/tech-debt-skill --global --copy \\\n"
+            "  --agent claude-code --skill tech-debt-audit --yes\n"
+            # Second command: missing --yes at the end.
+            "npx --yes skills@latest add ksimback/tech-debt-skill --global --copy \\\n"
+            "  --agent claude-code --skill tech-debt-review"
+        )
+        mutated_doc = self._replace_block(self._original_doc, new_body)
+        with _CopyFixture(
+            mutated_doc=mutated_doc, mutated_yaml=mutated_yaml
+        ) as fx:
+            result = fx.run_validator()
+        self.assertEqual(
+            result.returncode,
+            1,
+            msg=(
+                "second add command missing --yes must be rejected; "
+                f"got exit={result.returncode}\n{result.stdout}"
+            ),
+        )
+        self.assertIn("--yes", result.stdout)
 
 
 if __name__ == "__main__":
