@@ -16,9 +16,19 @@ Strengthened per CodeRabbit review:
 
 The doc may reference removed/legacy skills in prose or in `remove` blocks
 without invalidating the validator.
+
+The migration doc and external-skills.yaml paths can be overridden for
+testing (and for ad-hoc runs against fixtures) via:
+
+  - CLI args:  python validate-external-skills.py [migration_doc] [external_yaml]
+  - env vars:  EXTERNAL_SKILLS_MIGRATION_DOC, EXTERNAL_SKILLS_YAML
+
+If neither is supplied, the script falls back to the canonical
+`<repo>/docs/migration-npx.md` and `<repo>/external-skills.yaml` paths.
 """
 from __future__ import annotations
 
+import os
 import re
 import sys
 from collections import defaultdict
@@ -28,8 +38,8 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
-MIGRATION_DOC = ROOT / "docs" / "migration-npx.md"
-EXTERNAL_YAML = ROOT / "external-skills.yaml"
+DEFAULT_MIGRATION_DOC = ROOT / "docs" / "migration-npx.md"
+DEFAULT_EXTERNAL_YAML = ROOT / "external-skills.yaml"
 
 # Match a fenced ```bash ... ``` block. The regex is non-greedy and allows
 # the closing fence to be anywhere on its own line.
@@ -91,14 +101,14 @@ class SourceDecl:
     claude_code_only: bool
 
 
-def load_source_decls() -> list[SourceDecl]:
+def load_source_decls(external_yaml: Path = DEFAULT_EXTERNAL_YAML) -> list[SourceDecl]:
     """Read the sources + maintained_locally entries from external-skills.yaml.
 
     Both sections describe installable selections. `sources` use a `name:`
     key; `maintained_locally` entries use `source:`. From the validator's
     perspective, both must have install blocks in the doc.
     """
-    data = yaml.safe_load(EXTERNAL_YAML.read_text())
+    data = yaml.safe_load(Path(external_yaml).read_text())
     decls: list[SourceDecl] = []
     for key in ("sources", "maintained_locally"):
         for source in data.get(key, []):
@@ -160,6 +170,14 @@ def _split_block_into_commands(body: str) -> list[str]:
          add` invocation so two distinct commands on separate lines become
          two distinct segments.
       4. Fold `for ... do` preambles into the next add command.
+      5. Track `in_agent_loop` state across commands: once a
+         `for agent in $AGENTS; do` is seen, every subsequent add command
+         in the same fenced block inherits the `uses_agent_loop=True`
+         marker until a `done` closes the loop. Without this rule, a
+         loop containing two `npx skills@latest add` commands would
+         correctly attach the marker to the first command but miss the
+         second, and the validator would reject a valid shell
+         configuration.
     """
     # Normalize line continuations: " \<newline>" -> " " so the block
     # reads as a single logical line per `;` segment.
@@ -196,22 +214,48 @@ def _split_block_into_commands(body: str) -> list[str]:
                 raw_parts.append(tail)
 
     # Fold `for ... do` preambles into the next add command so the
-    # per-command loop marker is preserved. Trailing `done` and any
-    # other non-add tail is dropped (it's noise for the validator).
+    # per-command loop marker is preserved. Once a `for ... do` has
+    # been seen, the loop state persists across ALL subsequent add
+    # commands in the same block until a `done` closes it, so every
+    # command inside the loop carries `uses_agent_loop=True`. Trailing
+    # `done` and any other non-add tail is dropped (it's noise for
+    # the validator).
     commands: list[str] = []
     pending_preamble: list[str] = []
+    in_agent_loop = False
     for part in raw_parts:
         if ADD_CMD_HEAD_RE.search(part):
-            merged = " ".join(pending_preamble + [part])
+            # If we're inside a `for ... $AGENTS; do` loop, fold a
+            # synthetic `for ... do` preamble into the command so the
+            # per-command loop marker still triggers even when the
+            # original preamble is several commands back.
+            preamble = list(pending_preamble)
+            if in_agent_loop and not any(
+                re.search(r"for\s+agent\s+in\s+\$AGENTS", p) for p in preamble
+            ):
+                preamble.append("for agent in $AGENTS; do")
+            merged = " ".join(preamble + [part])
             commands.append(merged)
             pending_preamble = []
+        elif re.search(r"\bdone\b", part):
+            # The loop is closed. Reset the state so any further add
+            # commands in the block no longer inherit the marker.
+            in_agent_loop = False
+            pending_preamble = []
+            continue
         elif _is_for_loop_opener(part):
-            # Loop opener belongs to the following add command.
+            # Loop opener belongs to the following add command(s) until
+            # the matching `done`. Track the state so it propagates
+            # past intermediate commands (e.g. another add, a
+            # non-add statement).
             pending_preamble.append(part)
+            in_agent_loop = True
         else:
-            # Non-add part that is neither a loop opener nor a fresh
-            # add command. Examples: a `remove` command body, a trailing
-            # `done`, etc. None of these affect the add-block accounting.
+            # Non-add part that is neither a loop opener, a `done`,
+            # nor a fresh add command. Examples: a `remove` command
+            # body. None of these affect the add-block accounting,
+            # but we must not let them reset `in_agent_loop` — the
+            # loop is still open until we see `done`.
             continue
     return commands
 
@@ -274,9 +318,47 @@ def report(errors: list[str], msg: str) -> None:
     print(f"ERROR: {msg}")
 
 
-def main() -> int:
-    doc = MIGRATION_DOC.read_text()
-    decls = load_source_decls()
+def resolve_paths(argv: list[str] | None = None) -> tuple[Path, Path]:
+    """Resolve migration-doc and external-yaml paths from CLI args / env / defaults.
+
+    Precedence (highest first):
+      1. CLI positional args: argv[0] = migration_doc, argv[1] = external_yaml.
+      2. Environment variables: EXTERNAL_SKILLS_MIGRATION_DOC,
+         EXTERNAL_SKILLS_YAML.
+      3. Hardcoded defaults relative to the script's ROOT.
+    """
+    if argv is None:
+        argv = sys.argv[1:]
+    migration = (
+        Path(argv[0]).expanduser() if len(argv) >= 1 and argv[0]
+        else Path(os.environ["EXTERNAL_SKILLS_MIGRATION_DOC"]).expanduser()
+        if os.environ.get("EXTERNAL_SKILLS_MIGRATION_DOC")
+        else DEFAULT_MIGRATION_DOC
+    )
+    external = (
+        Path(argv[1]).expanduser() if len(argv) >= 2 and argv[1]
+        else Path(os.environ["EXTERNAL_SKILLS_YAML"]).expanduser()
+        if os.environ.get("EXTERNAL_SKILLS_YAML")
+        else DEFAULT_EXTERNAL_YAML
+    )
+    return migration, external
+
+
+def main(
+    migration_doc: Path | None = None,
+    external_yaml: Path | None = None,
+) -> int:
+    if migration_doc is None or external_yaml is None:
+        cli_doc, cli_yaml = resolve_paths()
+        if migration_doc is None:
+            migration_doc = cli_doc
+        if external_yaml is None:
+            external_yaml = cli_yaml
+    migration_doc = Path(migration_doc)
+    external_yaml = Path(external_yaml)
+
+    doc = migration_doc.read_text()
+    decls = load_source_decls(external_yaml)
     doc_agents = parse_doc_agent_set(doc)
     add_blocks = parse_add_blocks(doc)
 
@@ -420,7 +502,7 @@ def main() -> int:
     #   total_skills - skills whose source has claude_code_only=true
     # (for non-claude-code agents). For claude-code, every declared skill is
     # installed. We parse the prose for these three numbers and verify them.
-    data = yaml.safe_load(EXTERNAL_YAML.read_text())
+    data = yaml.safe_load(external_yaml.read_text())
     decls_for_count = data.get("sources", []) + data.get("maintained_locally", [])
     declared_total = sum(
         len(s.get("selection", [])) for s in decls_for_count
