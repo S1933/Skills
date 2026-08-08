@@ -21,8 +21,9 @@ definitive result:
    (usually `origin/main`).
 4. **Upstream of the current branch** — `git config --get branch.<current>.merge`
    or `@{upstream}`. Only use this to detect unpushed commits, not as the
-   review base: if `git diff @{upstream}...HEAD` returns no changes, fall
-   through to the remote default branch instead.
+   review base: select the base first via steps 1–3, then check upstream
+   separately with `git rev-list @{upstream}..HEAD --count`. Fall through to the
+   remote default branch only when that count is zero (i.e. everything is pushed).
 5. **Best-guess fallback, confirmed with the user** — e.g. the repository
    default visible from `origin/HEAD`; if still ambiguous, ask before reviewing.
 

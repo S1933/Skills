@@ -36,7 +36,7 @@ npx --yes skills@latest list --global --json > skills-before-migration.json
 
 ## 3. Remove the old copies
 
-Removal is limited to the 38 names historically versioned in `S1933/skills`.
+Removal is limited to the 37 names historically versioned in `S1933/skills`.
 A skill that is absent is simply ignored.
 
 The `--agent` value selects the target agent store. The catalogue targets the
