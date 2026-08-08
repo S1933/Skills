@@ -113,5 +113,7 @@ policy:
   # Replay the six `add` commands in docs/migration-npx.md rather than a bare
   # `update --global`, so only the declared selection is refreshed.
   update: "replay-declared-add"
-  # Record verified_commit/verified_at here after each review of upstream.
+  # Record verified_commit/verified_at here after each audit of upstream.
+  # These fields document the revision that was reviewed; they are not a
+  # pinning mechanism (the CLI always installs from the default branch).
   pinning: "optional-but-recommended"

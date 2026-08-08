@@ -36,11 +36,18 @@ git rev-parse --abbrev-ref @{upstream} >/dev/null 2>&1 \
 If the count is non-zero, warn the reviewer that commits have not been pushed;
 the review should still proceed against the selected base.
 
-Legacy heuristic (first existing of `develop` → `origin/develop` → `main` →
-`origin/main`) should only be used as the final fallback, and only after
-checking for an explicit base and a PR base. Prefer the
-remote (`origin/main`, `origin/develop`) over a possibly stale local branch so an
-obsolete local `develop` is not mistaken for the real base.
+Legacy heuristic (first existing of `origin/develop` → `develop` →
+`origin/main` → `main`) should only be used as the final fallback, and only
+after checking for an explicit base and a PR base. Prefer the
+remote (`origin/develop`, `origin/main`) over a possibly stale local branch
+so an obsolete local `develop` is not mistaken for the real base.
+
+```bash
+git show-ref --verify refs/remotes/origin/develop \
+  || git show-ref --verify refs/heads/develop \
+  || git show-ref --verify refs/remotes/origin/main \
+  || git show-ref --verify refs/heads/main
+```
 
 Use `git show-ref --verify` to check each candidate and stop at the first that
 exists.
