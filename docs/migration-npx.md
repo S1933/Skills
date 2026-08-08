@@ -125,8 +125,10 @@ done
 
 ## 8. Install caveman (1)
 
-Ultra-compressed communication mode (65% token reduction). Manually invoked;
-supports lite / full / ultra / wenyan intensity levels. Installable as a normal
+Ultra-compressed communication mode (65% token reduction). Note: upstream
+allows auto-triggering when token efficiency is requested; can conflict with
+`i-have-adhd` (both are persistent formatting modes). Supports lite / full /
+ultra / wenyan intensity levels. Installable as a normal
 `npx skills add` target (verified at https://skills.sh/juliusbrussee/caveman/caveman).
 
 ```bash
@@ -184,15 +186,14 @@ add with the same source and skill selection is idempotent; it overwrites
 already-present files automatically.
 
 ```bash
-for agent in $AGENTS; do \
-  npx --yes skills@latest update --global --agent "$agent" --yes; \
-done
+npx --yes skills@latest update --global --yes
 ```
 
-`update --global` is a per-agent sweep: it does not depend on `tech-debt-audit`
-being claude-code-only, so the loop above remains correct. After the sweep,
-re-verify per-agent counts (33 / 32 / 32 / 32) — the update will not have
-introduced `tech-debt-audit` on the non-claude-code agents.
+A bare `update --global` refreshes every installed skill including ones
+outside this catalogue's declared selection. Prefer the `add` commands above
+when the declared selection changes. After updating, re-verify per-agent
+counts (33 / 32 / 32 / 32) — `update` does not introduce `tech-debt-audit`
+on non-claude-code agents.
 
 Re-run the six `add` commands if the declared selection changes or if a skill
 is renamed upstream. For a reproducible, auditable install, record the pinned
