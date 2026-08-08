@@ -19,13 +19,18 @@ definitive result:
    or the MR equivalent / the `origin/<target>` ref).
 3. **Remote default branch** — `git symbolic-ref refs/remotes/origin/HEAD`
    (usually `origin/main`).
-4. **Upstream of the current branch** — `git config --get branch.<current>.merge`
-   or `@{upstream}`. Only use this to detect unpushed commits, not as the
-   review base: select the base first via steps 1–3, then check upstream
-   separately with `git rev-list @{upstream}..HEAD --count`. Fall through to the
-   remote default branch only when that count is zero (i.e. everything is pushed).
-5. **Best-guess fallback, confirmed with the user** — e.g. the repository
+4. **Best-guess fallback, confirmed with the user** — e.g. the repository
    default visible from `origin/HEAD`; if still ambiguous, ask before reviewing.
+
+After selecting the base, run a separate unpushed-commits check — this is
+not a base-selection step and must not gate the review:
+
+```
+git rev-list @{upstream}..HEAD --count
+```
+
+If the count is non-zero, warn the reviewer that commits have not been pushed;
+the review should still proceed against the selected base.
 
 Legacy heuristic (first existing of `develop` → `origin/develop` → `main` →
 `origin/main`) should only be used as the final fallback, and only after

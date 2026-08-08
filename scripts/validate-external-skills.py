@@ -185,23 +185,29 @@ def main() -> int:
         for b in blocks_by_source.get(decl.name, []):
             # 3a. Agent reachability for this block.
             if b.uses_agent_loop:
-                # The loop iterates over $AGENTS. The reachable set is the
-                # intersection of the doc's AGENTS set with the source's
-                # declared agents. If the source is claude_code_only, the
-                # doc's AGENTS loop is a misconfiguration: it would target
-                # agents the source doesn't support.
-                if decl.claude_code_only and doc_agents:
+                # The loop iterates over $AGENTS. Verify that every agent
+                # reachable via the loop is declared for this source, and
+                # that every declared agent is reachable.
+                if doc_agents:
                     extra = doc_agents - decl_agents
                     if extra:
                         report(
                             errors,
-                            f"source {decl.name!r} is claude_code_only but its "
-                            f"install block iterates $AGENTS which includes "
-                            f"{sorted(extra)}; must be restricted to "
-                            f"{sorted(decl_agents)}",
+                            f"source {decl.name!r} install block iterates "
+                            f"$AGENTS which includes {sorted(extra)}; these "
+                            f"are not in the source's declared agents list "
+                            f"({sorted(decl_agents)})",
                         )
-                # Skills added in a loop block still need each literal
-                # --agent referenced (none here) to be in decl_agents.
+                    missing_from_loop = decl_agents - doc_agents
+                    if missing_from_loop:
+                        report(
+                            errors,
+                            f"source {decl.name!r} declares agents "
+                            f"{sorted(missing_from_loop)} but the doc's "
+                            f"AGENTS set ({sorted(doc_agents)}) does not "
+                            f"include them; the loop will not install on "
+                            f"these agents",
+                        )
             else:
                 if not b.literal_agents:
                     report(
@@ -293,22 +299,17 @@ def main() -> int:
             )
 
     # --- Check 5: scan EVERY --force occurrence, not just the first. ---
+    # Build a set of character offsets that fall inside bash code blocks
+    # containing an `add` command, so prose mentions of --force (even
+    # right after a closed block) are not flagged.
+    add_block_spans: list[tuple[int, int]] = []
+    for m in FENCED_BASH_RE.finditer(doc):
+        if "npx" in m.group(1) and "skills@latest add" in m.group(1):
+            add_block_spans.append((m.start(), m.end()))
     for m in re.finditer(r"--force", doc):
         idx = m.start()
-        # Look at a generous context window (the surrounding paragraph /
-        # bash block) for a code-block `add` command.
-        # We pick the nearest preceding ```bash fence and the next closing
-        # ``` to bound the context.
-        window_start = doc.rfind("```bash", 0, idx)
-        if window_start == -1:
-            # Prose mention of --force is allowed; only block usage is an
-            # error. Skip prose hits.
-            continue
-        window_end = doc.find("```", idx)
-        if window_end == -1:
-            window_end = len(doc)
-        context = doc[window_start:window_end]
-        if "add" in context and "skills@latest add" in context:
+        in_add_block = any(start <= idx < end for start, end in add_block_spans)
+        if in_add_block:
             report(
                 errors,
                 f"docs/migration-npx.md uses --force inside an `add` block at "
