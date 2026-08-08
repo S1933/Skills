@@ -12,7 +12,7 @@ A validated catalogue of portable and client-specific Agent Skills. The reposito
 - [Evaluation format](docs/evaluations.md)
 - [Provenance](NOTICE.md)
 
-## Public skills (11)
+## Public skills (12)
 
 | Skill | Invocation | Clients | Description |
 |---|---|---|---|
@@ -23,6 +23,7 @@ A validated catalogue of portable and client-specific Agent Skills. The reposito
 | [`embedded-fixtures`](embedded-fixtures/) | automatic | agent-skills | Use when binaries or tests need deterministic templates, schemas, migrations, defaults, or sample files packaged with the executable through Go embed or an equivalent resource mechanism. |
 | [`go-cli-conventions`](go-cli-conventions/) | automatic | agent-skills | Use when creating, extending, or reviewing Go 1.24+ command-line applications, especially Cobra commands, flags, exit behavior, configuration, and testable CLI boundaries. |
 | [`golden-file-testing`](golden-file-testing/) | automatic | agent-skills | Use when testing generated text, configuration, serialization, templates, compiler output, or other stable artifacts whose complete shape matters more than isolated fields. |
+| [`i-have-adhd`](i-have-adhd/) | manual | agent-skills | Use when explicitly invoking /i-have-adhd to shape every response for a reader with ADHD — lead with the next action, number multi-step work, suppress tangents, restate state across turns, and make completed work visible. |
 | [`repository-reconnaissance`](repository-reconnaissance/) | automatic | agent-skills | Use when an audit, review, plan, or unfamiliar repository task needs an evidence-based map of instructions, architecture, commands, history, and inspectable scope before conclusions are drawn. |
 | [`review-scope`](review-scope/) | automatic | agent-skills | Use when beginning a code review that must include committed, staged, unstaged, and relevant untracked changes against the correct base. |
 | [`[REMOVED-INTERNAL-SKILL]`]([REMOVED-INTERNAL-SKILL]/) | automatic | agent-skills | Use when integrating the Scaleflex, Filerobot, or Cloudimage API — searching DAM assets by metadata, uploading files, running Visual AI models, or invalidating CDN cache. |

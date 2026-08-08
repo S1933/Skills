@@ -66,6 +66,14 @@ sources:
     claude_code_only: true
     notes: "Declares itself a Claude Code skill and references TodoWrite and the Task tool; needs adaptation for codex/opencode/cursor."
 
+  - name: ayghri/i-have-adhd
+    selection: [i-have-adhd]
+    agents: [claude-code, codex, opencode, cursor]
+    verified_commit: null
+    verified_at: null
+    claude_code_only: false
+    notes: "Manually invoked (/i-have-adhd). Shapes output for ADHD readers. Ported with trimmed word count to fit 800-word budget. Tested on agent-skills compatible clients."
+
 maintained_locally:
   # 11 public skills installed from S1933/skills itself (self-hosted source).
   - source: S1933/skills
