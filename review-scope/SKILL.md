@@ -17,10 +17,12 @@ definitive result:
 2. **Pull/merge request base** — if the current branch has an open PR/MR,
    use its declared target (e.g. `gh pr view --json baseRefName -q .baseRefName`
    or the MR equivalent / the `origin/<target>` ref).
-3. **Upstream of the current branch** — `git config --get branch.<current>.merge`
-   or `@{upstream}`.
-4. **Remote default branch** — `git symbolic-ref refs/remotes/origin/HEAD`
+3. **Remote default branch** — `git symbolic-ref refs/remotes/origin/HEAD`
    (usually `origin/main`).
+4. **Upstream of the current branch** — `git config --get branch.<current>.merge`
+   or `@{upstream}`. Only use this to detect unpushed commits, not as the
+   review base: if `git diff @{upstream}...HEAD` returns no changes, fall
+   through to the remote default branch instead.
 5. **Best-guess fallback, confirmed with the user** — e.g. the repository
    default visible from `origin/HEAD`; if still ambiguous, ask before reviewing.
 
