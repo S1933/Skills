@@ -21,18 +21,28 @@ ONLY=""
 GLOBAL=false
 YES=true
 
-for arg in "$@"; do
-  case "$arg" in
-    --dry-run)    DRY_RUN=true; YES=false ;;
-    --all)        ALL=true ;;
-    --only=*)     ONLY="${arg#--only=}" ;;
-    --only)       shift; ONLY="${1:-}" ;;
-    --global|-g)  GLOBAL=true ;;
-    --project|-p) GLOBAL=false ;;
-    --no-yes)     YES=false ;;
+# Argument parser — use while + shift instead of `for arg in "$@"` so we can
+# consume arguments with their values (e.g. --only NAME).
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --dry-run)    DRY_RUN=true; YES=false; shift ;;
+    --all)        ALL=true; shift ;;
+    --only)
+      [[ $# -ge 2 ]] || { echo "ERROR: --only requires a skill name" >&2; exit 2; }
+      ONLY="$2"
+      shift 2
+      ;;
+    --only=*)     ONLY="${1#--only=}"; shift ;;
+    --global|-g)  GLOBAL=true; shift ;;
+    --project|-p) GLOBAL=false; shift ;;
+    --no-yes)     YES=false; shift ;;
     -h|--help)
       sed -n '2,15p' "$0"; exit 0 ;;
-    *) echo "Unknown arg: $arg" >&2; exit 2 ;;
+    *)
+      echo "ERROR: unknown arg: $1" >&2
+      echo "Usage: $0 [--dry-run] [--all] [--only NAME] [--global] [--no-yes]" >&2
+      exit 2
+      ;;
   esac
 done
 

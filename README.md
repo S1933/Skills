@@ -14,7 +14,7 @@ We don't install both collections in full to avoid rule collisions and duplicate
 ## Install
 
 ```bash
-# Install all 27 verified skills
+# Install all 26 verified skills
 ./install.sh
 
 # Preview without executing
@@ -28,7 +28,7 @@ We don't install both collections in full to avoid rule collisions and duplicate
 
 ## Registry
 
-[`registry.json`](./registry.json) — flat list of 27 entries:
+[`registry.json`](./registry.json) — flat list of 26 entries:
 
 ```json
 {
@@ -39,7 +39,7 @@ We don't install both collections in full to avoid rule collisions and duplicate
 }
 ```
 
-Each entry has a `role` documenting why it's in the registry: `discovery`, `design`, `implementation`, `quality`, `delivery`, or `style`.
+Each entry has a `role` documenting why it's in the registry: `discovery`, `design`, `implementation`, `setup`, `quality`, `delivery`, or `style`.
 
 Run `./validate-registry.sh` to assert `count === skills.length`, no duplicates, and valid roles. CI runs the same check on every push (`.github/workflows/validate-registry.yml`).
 
@@ -48,7 +48,7 @@ Run `./validate-registry.sh` to assert `count === skills.length`, no duplicates,
 | Source | Count | Role |
 |---|---:|---|
 | `mattpocock/skills` | 15 | Engineering discipline |
-| `obra/superpowers` | 9 | Execution / orchestration |
+| `obra/superpowers` | 8 | Execution / orchestration |
 | `juliusbrussee/caveman` | 1 | Output style |
 | `ayghri/i-have-adhd` | 1 | Output style |
 | `ksimback/tech-debt-skill` | 1 | Audit |
@@ -56,10 +56,13 @@ Run `./validate-registry.sh` to assert `count === skills.length`, no duplicates,
 ## Adding a skill
 
 1. Confirm upstream exists on [skills.sh](https://skills.sh/).
-2. Edit `registry.json` — add `{ "name", "owner", "repo", "role" }`. `role` ∈ `discovery`, `design`, `implementation`, `quality`, `delivery`, `style`.
-3. Run `./install.sh --dry-run --only=<name>` to verify the command.
-4. Run `./validate-registry.sh` to confirm integrity.
-5. Commit and push — CI runs both checks.
+2. Check there is no equivalent already in the registry (Matt vs Superpowers overlap check).
+3. Edit `registry.json` — add `{ "name", "owner", "repo", "role" }`. `role` ∈ `discovery`, `design`, `implementation`, `setup`, `quality`, `delivery`, `style`.
+4. Run `./install.sh --dry-run --only=<name>` to verify the command.
+5. Run `./validate-registry.sh` to confirm integrity.
+6. Commit and push — CI runs both checks.
+
+Skills with a HARD-GATE upstream (e.g. `obra/superpowers/brainstorming`) are not eligible for the hybrid: they conflict with the Matt-driven engineering flow.
 
 ## Why a manifest, not a fork
 
@@ -70,8 +73,12 @@ Versioning the `SKILL.md` content forced constant re-syncs with upstream. The ma
 ```
 .
 ├── README.md
-├── registry.json           # 27 skills, declarative
-└── install.sh              # one-shot installer
+├── registry.json                       # 26 skills, declarative
+├── install.sh                          # one-shot installer
+├── validate-registry.sh                # integrity guard
+└── .github/
+    └── workflows/
+        └── validate-registry.yml       # CI on push/PR
 ```
 
 The repo ships zero skill content. Run `./install.sh` to pull everything from skills.sh.

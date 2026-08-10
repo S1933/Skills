@@ -1,17 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "name": "s1933-skills-registry",
-  "description": "Flat registry of agent skills to install via 'npx skills add'. Hybrid of mattpocock/skills (engineering) and obra/superpowers (orchestration). Each entry has a role (discovery/design/implementation/quality/delivery/style) documenting why the skill is in the registry.",
+  "description": "Flat registry of agent skills to install via 'npx skills add'. Hybrid of mattpocock/skills (engineering) and obra/superpowers (orchestration). Each entry has a role (discovery/design/implementation/quality/delivery/style) documenting why the skill is in the registry. Excludes obra/superpowers/brainstorming (HARD-GATE incompatible with the Matt+Superpowers hybrid).",
   "version": "1.0.0",
   "generated_at": "2026-08-10",
-  "count": 27,
+  "count": 26,
   "skills": [
-    {
-      "name": "brainstorming",
-      "owner": "obra",
-      "repo": "superpowers",
-      "role": "discovery"
-    },
     {
       "name": "grill-with-docs",
       "owner": "mattpocock",
@@ -82,7 +76,7 @@
       "name": "setup-matt-pocock-skills",
       "owner": "mattpocock",
       "repo": "skills",
-      "role": "implementation"
+      "role": "setup"
     },
     {
       "name": "subagent-driven-development",

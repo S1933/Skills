@@ -3,10 +3,18 @@ name: Validate registry
 on:
   push:
     branches: [main]
-    paths: [registry.json, validate-registry.sh]
+    paths:
+      - registry.json
+      - install.sh
+      - validate-registry.sh
+      - .github/workflows/validate-registry.yml
   pull_request:
     branches: [main]
-    paths: [registry.json, validate-registry.sh]
+    paths:
+      - registry.json
+      - install.sh
+      - validate-registry.sh
+      - .github/workflows/validate-registry.yml
 
 jobs:
   validate:

@@ -37,8 +37,9 @@ if count != len(skills):
     errors.append(f"count ({count}) != skills.length ({len(skills)})")
 
 # 2) Each entry has required fields and a valid role
-VALID_ROLES = {"discovery", "design", "implementation", "quality", "delivery", "style"}
-seen = set()
+VALID_ROLES = {"discovery", "design", "implementation", "quality", "delivery", "style", "setup"}
+seen_sources = set()  # (owner, repo, name) — exact source identity
+seen_names = set()     # name only — namespace collision guard
 for i, s in enumerate(skills):
     name = s.get("name", "").strip()
     owner = s.get("owner", "").strip()
@@ -56,22 +57,30 @@ for i, s in enumerate(skills):
     if owner == "TBD" or repo == "TBD":
         warnings.append(f"skills[{i}] ({name}): TBD upstream — install skipped by default")
 
-    if role and role not in VALID_ROLES:
+    # Role is part of the contract — fail CI if missing or invalid
+    if not role:
+        errors.append(f"skills[{i}] ({name}): missing required 'role' field")
+    elif role not in VALID_ROLES:
         errors.append(f"skills[{i}] ({name}): invalid role '{role}' (allowed: {sorted(VALID_ROLES)})")
-    elif not role:
-        warnings.append(f"skills[{i}] ({name}): no 'role' field")
 
-    key = (owner, repo, name)
-    if key in seen:
-        errors.append(f"skills[{i}] ({name}): duplicate entry ({owner}/{repo}/{name})")
-    seen.add(key)
+    # Name uniqueness across the registry — protects against namespace
+    # collisions when two repos publish a skill with the same name.
+    if name in seen_names:
+        errors.append(f"skills[{i}] ({name}): duplicate skill name (would collide on install)")
+    seen_names.add(name)
 
-# 3) Role distribution sanity check
+    # Source identity — exact triple match for fork detection
+    source_key = (owner, repo, name)
+    if source_key in seen_sources:
+        errors.append(f"skills[{i}] ({name}): duplicate source ({owner}/{repo}/{name})")
+    seen_sources.add(source_key)
+
+# 3) Role distribution sanity check — roles never used are flagged as warnings
 from collections import Counter
-roles = Counter(s.get("role", "(none)") for s in skills)
-unbalanced = [r for r, n in roles.items() if n == 0]
-if unbalanced and "(none)" not in unbalanced:
-    warnings.append(f"unused roles: {unbalanced}")
+roles = Counter(s.get("role") for s in skills if s.get("role"))
+unused_roles = VALID_ROLES - set(roles.keys())
+if unused_roles:
+    warnings.append(f"roles declared but unused: {sorted(unused_roles)}")
 
 # Report
 print(f"Registry: {path}")
