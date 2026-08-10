@@ -1,11 +1,16 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "name": "s1933-skills-registry",
-  "description": "Flat registry of agent skills to install via 'npx skills add'. Replaces the versioned SKILL.md content with declarative manifests. Run install.sh or ./install.sh to apply. Filtered: 12 TBD skills removed (no confirmed upstream).",
+  "description": "Flat registry of agent skills to install via 'npx skills add'. Replaces the versioned SKILL.md content with declarative manifests. Run install.sh or ./install.sh to apply. Hybrid of mattpocock/skills (engineering) and obra/superpowers (orchestration).",
   "version": "1.0.0",
   "generated_at": "2026-08-10",
-  "count": 23,
+  "count": 27,
   "skills": [
+    {
+      "name": "brainstorming",
+      "owner": "obra",
+      "repo": "superpowers"
+    },
     {
       "name": "caveman",
       "owner": "juliusbrussee",
@@ -35,6 +40,11 @@
       "name": "domain-modeling",
       "owner": "mattpocock",
       "repo": "skills"
+    },
+    {
+      "name": "executing-plans",
+      "owner": "obra",
+      "repo": "superpowers"
     },
     {
       "name": "finishing-a-development-branch",
@@ -82,6 +92,11 @@
       "repo": "skills"
     },
     {
+      "name": "subagent-driven-development",
+      "owner": "obra",
+      "repo": "superpowers"
+    },
+    {
       "name": "tdd",
       "owner": "mattpocock",
       "repo": "skills"
@@ -105,6 +120,11 @@
       "name": "triage",
       "owner": "mattpocock",
       "repo": "skills"
+    },
+    {
+      "name": "using-git-worktrees",
+      "owner": "obra",
+      "repo": "superpowers"
     },
     {
       "name": "verification-before-completion",

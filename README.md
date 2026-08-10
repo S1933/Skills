@@ -2,10 +2,19 @@
 
 A declarative registry of [agent skills](https://skills.sh/) installed via `npx skills add`. No skill content is versioned here — only the manifest pointing at upstream sources.
 
+## Hybrid strategy
+
+A `mattpocock/skills` × `obra/superpowers` hybrid, based on a comparative analysis:
+
+- **Matt Pocock** = engineering discipline (grilling, TDD, diagnosing, codebase-design, domain-modeling)
+- **Superpowers** = execution/orchestration (worktrees, subagents, parallel dispatch, verification, finishing branch)
+
+We don't install both collections in full to avoid rule collisions and duplicates.
+
 ## Install
 
 ```bash
-# Install all 23 verified skills
+# Install all 27 verified skills
 ./install.sh
 
 # Preview without executing
@@ -33,12 +42,13 @@ Entries with `"source": "tbd"` are skipped by default. Pass `--all` to attempt t
 
 ## Sources
 
-| Source | Count | Skills |
-|---|---|---|
-| `mattpocock/skills` | 20 | code-review, codebase-design, diagnosing-bugs, dispatching-parallel-agents, domain-modeling, finishing-a-development-branch, grill-with-docs, grilling, handoff, improve-codebase-architecture, receiving-code-review, requesting-code-review, setup-matt-pocock-skills, tdd, to-spec, to-tickets, triage, verification-before-completion, wait-what, writing-for-agents |
-| `juliusbrussee/caveman` | 1 | caveman |
-| `ayghri/i-have-adhd` | 1 | i-have-adhd |
-| `ksimback/tech-debt-skill` | 1 | tech-debt-audit |
+| Source | Count | Role |
+|---|---:|---|
+| `mattpocock/skills` | 15 | Engineering (grilling, TDD, diagnosing, codebase-design, domain-modeling, code review) |
+| `obra/superpowers` | 9 | Orchestration (worktrees, plans, subagents, parallel dispatch, verification, finishing branch) |
+| `juliusbrussee/caveman` | 1 | Output style |
+| `ayghri/i-have-adhd` | 1 | Output style |
+| `ksimback/tech-debt-skill` | 1 | Audit |
 
 ## Adding a skill
 
