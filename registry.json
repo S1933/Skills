@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "name": "s1933-skills-registry",
+  "description": "Flat registry of agent skills to install via 'npx skills add'. Replaces the versioned SKILL.md content with declarative manifests. Run install.sh or ./install.sh to apply. Filtered: 12 TBD skills removed (no confirmed upstream).",
+  "version": "1.0.0",
+  "generated_at": "2026-08-10",
+  "count": 23,
+  "skills": [
+    {
+      "name": "caveman",
+      "owner": "juliusbrussee",
+      "repo": "caveman"
+    },
+    {
+      "name": "code-review",
+      "owner": "mattpocock",
+      "repo": "skills"
+    },
+    {
+      "name": "codebase-design",
+      "owner": "mattpocock",
+      "repo": "skills"
+    },
+    {
+      "name": "diagnosing-bugs",
+      "owner": "mattpocock",
+      "repo": "skills"
+    },
+    {
+      "name": "dispatching-parallel-agents",
+      "owner": "mattpocock",
+      "repo": "skills"
+    },
+    {
+      "name": "domain-modeling",
+      "owner": "mattpocock",
+      "repo": "skills"
+    },
+    {
+      "name": "finishing-a-development-branch",
+      "owner": "mattpocock",
+      "repo": "skills"
+    },
+    {
+      "name": "grill-with-docs",
+      "owner": "mattpocock",
+      "repo": "skills"
+    },
+    {
+      "name": "grilling",
+      "owner": "mattpocock",
+      "repo": "skills"
+    },
+    {
+      "name": "handoff",
+      "owner": "mattpocock",
+      "repo": "skills"
+    },
+    {
+      "name": "i-have-adhd",
+      "owner": "ayghri",
+      "repo": "i-have-adhd"
+    },
+    {
+      "name": "improve-codebase-architecture",
+      "owner": "mattpocock",
+      "repo": "skills"
+    },
+    {
+      "name": "receiving-code-review",
+      "owner": "mattpocock",
+      "repo": "skills"
+    },
+    {
+      "name": "requesting-code-review",
+      "owner": "mattpocock",
+      "repo": "skills"
+    },
+    {
+      "name": "setup-matt-pocock-skills",
+      "owner": "mattpocock",
+      "repo": "skills"
+    },
+    {
+      "name": "tdd",
+      "owner": "mattpocock",
+      "repo": "skills"
+    },
+    {
+      "name": "tech-debt-audit",
+      "owner": "ksimback",
+      "repo": "tech-debt-skill"
+    },
+    {
+      "name": "to-spec",
+      "owner": "mattpocock",
+      "repo": "skills"
+    },
+    {
+      "name": "to-tickets",
+      "owner": "mattpocock",
+      "repo": "skills"
+    },
+    {
+      "name": "triage",
+      "owner": "mattpocock",
+      "repo": "skills"
+    },
+    {
+      "name": "verification-before-completion",
+      "owner": "mattpocock",
+      "repo": "skills"
+    },
+    {
+      "name": "wait-what",
+      "owner": "mattpocock",
+      "repo": "skills"
+    },
+    {
+      "name": "writing-for-agents",
+      "owner": "mattpocock",
+      "repo": "skills"
+    }
+  ]
+}
