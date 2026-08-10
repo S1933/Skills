@@ -20,9 +20,9 @@ Matt Pocock (engineering discipline) × obra/superpowers (execution/orchestratio
 | `mattpocock/skills` | 15 | Engineering (grilling, TDD, diagnosing, code review, codebase-design) |
 | `obra/superpowers` | 8 | Execution (worktrees, subagents, dispatch, verification, finishing) |
 | `multica-ai/andrej-karpathy-skills` | 1 | Coding discipline (anti-overengineering) |
+| `anthropics/knowledge-work-plugins` | 1 | Tech debt audit |
 | `juliusbrussee/caveman` | 1 | Output style |
 | `ayghri/i-have-adhd` | 1 | Output style |
-| `ksimback/tech-debt-skill` | 1 | Audit |
 
 ## Registry
 

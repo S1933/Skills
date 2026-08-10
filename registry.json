@@ -121,9 +121,9 @@
       "role": "implementation"
     },
     {
-      "name": "tech-debt-audit",
-      "owner": "ksimback",
-      "repo": "tech-debt-skill",
+      "name": "tech-debt",
+      "owner": "anthropics",
+      "repo": "knowledge-work-plugins",
       "role": "quality"
     },
     {
