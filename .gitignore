@@ -2,3 +2,12 @@
 
 __pycache__/
 *.py[cod]
+
+# Custom / internal skills (not part of the public distribution)
+/[REMOVED-INTERNAL-SKILL]/
+/[REMOVED-INTERNAL-SKILL]/
+/[REMOVED-INTERNAL-MARKER]/
+/[REMOVED-INTERNAL-SKILL]/
+/[REMOVED-INTERNAL-SKILL]/
+/[REMOVED-INTERNAL-SKILL]/
+/[REMOVED-INTERNAL-SKILL]/
