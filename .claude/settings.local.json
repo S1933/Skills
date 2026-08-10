@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(rtk read *)",
-      "Bash(rtk git *)"
-    ]
-  }
-}
