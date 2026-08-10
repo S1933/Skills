@@ -28,24 +28,27 @@ We don't install both collections in full to avoid rule collisions and duplicate
 
 ## Registry
 
-[`registry.json`](./registry.json) — flat list of 23 entries:
+[`registry.json`](./registry.json) — flat list of 27 entries:
 
 ```json
 {
   "name": "tdd",
   "owner": "mattpocock",
-  "repo": "skills"
+  "repo": "skills",
+  "role": "implementation"
 }
 ```
 
-Entries with `"source": "tbd"` are skipped by default. Pass `--all` to attempt them anyway.
+Each entry has a `role` documenting why it's in the registry: `discovery`, `design`, `implementation`, `quality`, `delivery`, or `style`.
+
+Run `./validate-registry.sh` to assert `count === skills.length`, no duplicates, and valid roles. CI runs the same check on every push (`.github/workflows/validate-registry.yml`).
 
 ## Sources
 
 | Source | Count | Role |
 |---|---:|---|
-| `mattpocock/skills` | 15 | Engineering (grilling, TDD, diagnosing, codebase-design, domain-modeling, code review) |
-| `obra/superpowers` | 9 | Orchestration (worktrees, plans, subagents, parallel dispatch, verification, finishing branch) |
+| `mattpocock/skills` | 15 | Engineering discipline |
+| `obra/superpowers` | 9 | Execution / orchestration |
 | `juliusbrussee/caveman` | 1 | Output style |
 | `ayghri/i-have-adhd` | 1 | Output style |
 | `ksimback/tech-debt-skill` | 1 | Audit |
@@ -53,9 +56,10 @@ Entries with `"source": "tbd"` are skipped by default. Pass `--all` to attempt t
 ## Adding a skill
 
 1. Confirm upstream exists on [skills.sh](https://skills.sh/).
-2. Edit `registry.json` — add `{ "name", "owner", "repo" }`.
+2. Edit `registry.json` — add `{ "name", "owner", "repo", "role" }`. `role` ∈ `discovery`, `design`, `implementation`, `quality`, `delivery`, `style`.
 3. Run `./install.sh --dry-run --only=<name>` to verify the command.
-4. Commit and push.
+4. Run `./validate-registry.sh` to confirm integrity.
+5. Commit and push — CI runs both checks.
 
 ## Why a manifest, not a fork
 
@@ -66,7 +70,7 @@ Versioning the `SKILL.md` content forced constant re-syncs with upstream. The ma
 ```
 .
 ├── README.md
-├── registry.json           # 23 skills, declarative
+├── registry.json           # 27 skills, declarative
 └── install.sh              # one-shot installer
 ```
 

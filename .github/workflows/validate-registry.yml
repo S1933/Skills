@@ -1,0 +1,43 @@
+name: Validate registry
+
+on:
+  push:
+    branches: [main]
+    paths: [registry.json, validate-registry.sh]
+  pull_request:
+    branches: [main]
+    paths: [registry.json, validate-registry.sh]
+
+jobs:
+  validate:
+    name: registry.json integrity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate registry.json
+        run: |
+          chmod +x validate-registry.sh
+          ./validate-registry.sh
+
+      - name: Smoke-test install.sh (dry-run)
+        run: |
+          chmod +x install.sh
+          ./install.sh --dry-run | tee /tmp/install.log > /dev/null
+      - name: Verify all registry entries are planned
+        run: |
+          python3 - <<'PYEOF'
+          import json, sys
+          with open('registry.json') as f:
+              reg = json.load(f)
+          with open('/tmp/install.log') as f:
+              log = f.read()
+          missing = [s['name'] for s in reg['skills']
+                     if s['owner'] != 'TBD'
+                     and s['name'] not in log]
+          if missing:
+              print(f'ERROR: install.sh dry-run did not plan: {missing}')
+              sys.exit(1)
+          planned = len(reg['skills']) - sum(1 for s in reg['skills'] if s['owner'] == 'TBD')
+          print(f'OK: install.sh planned all {planned} non-TBD skills')
+          PYEOF

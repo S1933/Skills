@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "name": "s1933-skills-registry",
-  "description": "Flat registry of agent skills to install via 'npx skills add'. Replaces the versioned SKILL.md content with declarative manifests. Run install.sh or ./install.sh to apply. Hybrid of mattpocock/skills (engineering) and obra/superpowers (orchestration).",
+  "description": "Flat registry of agent skills to install via 'npx skills add'. Hybrid of mattpocock/skills (engineering) and obra/superpowers (orchestration). Each entry has a role (discovery/design/implementation/quality/delivery/style) documenting why the skill is in the registry.",
   "version": "1.0.0",
   "generated_at": "2026-08-10",
   "count": 27,
@@ -9,137 +9,164 @@
     {
       "name": "brainstorming",
       "owner": "obra",
-      "repo": "superpowers"
-    },
-    {
-      "name": "caveman",
-      "owner": "juliusbrussee",
-      "repo": "caveman"
-    },
-    {
-      "name": "code-review",
-      "owner": "mattpocock",
-      "repo": "skills"
-    },
-    {
-      "name": "codebase-design",
-      "owner": "mattpocock",
-      "repo": "skills"
-    },
-    {
-      "name": "diagnosing-bugs",
-      "owner": "mattpocock",
-      "repo": "skills"
-    },
-    {
-      "name": "dispatching-parallel-agents",
-      "owner": "obra",
-      "repo": "superpowers"
-    },
-    {
-      "name": "domain-modeling",
-      "owner": "mattpocock",
-      "repo": "skills"
-    },
-    {
-      "name": "executing-plans",
-      "owner": "obra",
-      "repo": "superpowers"
-    },
-    {
-      "name": "finishing-a-development-branch",
-      "owner": "obra",
-      "repo": "superpowers"
+      "repo": "superpowers",
+      "role": "discovery"
     },
     {
       "name": "grill-with-docs",
       "owner": "mattpocock",
-      "repo": "skills"
+      "repo": "skills",
+      "role": "discovery"
     },
     {
       "name": "grilling",
       "owner": "mattpocock",
-      "repo": "skills"
-    },
-    {
-      "name": "handoff",
-      "owner": "mattpocock",
-      "repo": "skills"
-    },
-    {
-      "name": "i-have-adhd",
-      "owner": "ayghri",
-      "repo": "i-have-adhd"
-    },
-    {
-      "name": "improve-codebase-architecture",
-      "owner": "mattpocock",
-      "repo": "skills"
-    },
-    {
-      "name": "receiving-code-review",
-      "owner": "obra",
-      "repo": "superpowers"
-    },
-    {
-      "name": "requesting-code-review",
-      "owner": "obra",
-      "repo": "superpowers"
-    },
-    {
-      "name": "setup-matt-pocock-skills",
-      "owner": "mattpocock",
-      "repo": "skills"
-    },
-    {
-      "name": "subagent-driven-development",
-      "owner": "obra",
-      "repo": "superpowers"
-    },
-    {
-      "name": "tdd",
-      "owner": "mattpocock",
-      "repo": "skills"
-    },
-    {
-      "name": "tech-debt-audit",
-      "owner": "ksimback",
-      "repo": "tech-debt-skill"
-    },
-    {
-      "name": "to-spec",
-      "owner": "mattpocock",
-      "repo": "skills"
-    },
-    {
-      "name": "to-tickets",
-      "owner": "mattpocock",
-      "repo": "skills"
-    },
-    {
-      "name": "triage",
-      "owner": "mattpocock",
-      "repo": "skills"
-    },
-    {
-      "name": "using-git-worktrees",
-      "owner": "obra",
-      "repo": "superpowers"
-    },
-    {
-      "name": "verification-before-completion",
-      "owner": "obra",
-      "repo": "superpowers"
+      "repo": "skills",
+      "role": "discovery"
     },
     {
       "name": "wait-what",
       "owner": "mattpocock",
-      "repo": "skills"
+      "repo": "skills",
+      "role": "discovery"
+    },
+    {
+      "name": "codebase-design",
+      "owner": "mattpocock",
+      "repo": "skills",
+      "role": "design"
+    },
+    {
+      "name": "domain-modeling",
+      "owner": "mattpocock",
+      "repo": "skills",
+      "role": "design"
+    },
+    {
+      "name": "improve-codebase-architecture",
+      "owner": "mattpocock",
+      "repo": "skills",
+      "role": "design"
+    },
+    {
+      "name": "to-spec",
+      "owner": "mattpocock",
+      "repo": "skills",
+      "role": "design"
+    },
+    {
+      "name": "to-tickets",
+      "owner": "mattpocock",
+      "repo": "skills",
+      "role": "design"
     },
     {
       "name": "writing-for-agents",
       "owner": "mattpocock",
-      "repo": "skills"
+      "repo": "skills",
+      "role": "design"
+    },
+    {
+      "name": "dispatching-parallel-agents",
+      "owner": "obra",
+      "repo": "superpowers",
+      "role": "implementation"
+    },
+    {
+      "name": "executing-plans",
+      "owner": "obra",
+      "repo": "superpowers",
+      "role": "implementation"
+    },
+    {
+      "name": "setup-matt-pocock-skills",
+      "owner": "mattpocock",
+      "repo": "skills",
+      "role": "implementation"
+    },
+    {
+      "name": "subagent-driven-development",
+      "owner": "obra",
+      "repo": "superpowers",
+      "role": "implementation"
+    },
+    {
+      "name": "tdd",
+      "owner": "mattpocock",
+      "repo": "skills",
+      "role": "implementation"
+    },
+    {
+      "name": "using-git-worktrees",
+      "owner": "obra",
+      "repo": "superpowers",
+      "role": "implementation"
+    },
+    {
+      "name": "code-review",
+      "owner": "mattpocock",
+      "repo": "skills",
+      "role": "quality"
+    },
+    {
+      "name": "diagnosing-bugs",
+      "owner": "mattpocock",
+      "repo": "skills",
+      "role": "quality"
+    },
+    {
+      "name": "receiving-code-review",
+      "owner": "obra",
+      "repo": "superpowers",
+      "role": "quality"
+    },
+    {
+      "name": "requesting-code-review",
+      "owner": "obra",
+      "repo": "superpowers",
+      "role": "quality"
+    },
+    {
+      "name": "tech-debt-audit",
+      "owner": "ksimback",
+      "repo": "tech-debt-skill",
+      "role": "quality"
+    },
+    {
+      "name": "triage",
+      "owner": "mattpocock",
+      "repo": "skills",
+      "role": "quality"
+    },
+    {
+      "name": "finishing-a-development-branch",
+      "owner": "obra",
+      "repo": "superpowers",
+      "role": "delivery"
+    },
+    {
+      "name": "handoff",
+      "owner": "mattpocock",
+      "repo": "skills",
+      "role": "delivery"
+    },
+    {
+      "name": "verification-before-completion",
+      "owner": "obra",
+      "repo": "superpowers",
+      "role": "delivery"
+    },
+    {
+      "name": "caveman",
+      "owner": "juliusbrussee",
+      "repo": "caveman",
+      "role": "style"
+    },
+    {
+      "name": "i-have-adhd",
+      "owner": "ayghri",
+      "repo": "i-have-adhd",
+      "role": "style"
     }
   ]
 }
