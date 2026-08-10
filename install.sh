@@ -6,25 +6,32 @@
 #   ./install.sh --all            # also attempt TBD entries (will warn/error)
 #   ./install.sh --dry-run        # show what would run, don't execute
 #   ./install.sh --only <name>    # install a single skill by name
+#   ./install.sh --global         # install globally (skip if agent doesn't support it)
 #
 # Replaces the old model of versioning SKILL.md content with declarative
 # installation from skills.sh manifests.
 
-set -euo pipefail
+set -uo pipefail
 
 REGISTRY="${REGISTRY:-$(dirname "$0")/registry.json}"
+
 DRY_RUN=false
 ALL=false
 ONLY=""
+GLOBAL=false
+YES=true
 
 for arg in "$@"; do
   case "$arg" in
-    --dry-run)   DRY_RUN=true ;;
-    --all)       ALL=true ;;
-    --only=*)    ONLY="${arg#--only=}" ;;
-    --only)      shift; ONLY="${1:-}" ;;
+    --dry-run)    DRY_RUN=true; YES=false ;;
+    --all)        ALL=true ;;
+    --only=*)     ONLY="${arg#--only=}" ;;
+    --only)       shift; ONLY="${1:-}" ;;
+    --global|-g)  GLOBAL=true ;;
+    --project|-p) GLOBAL=false ;;
+    --no-yes)     YES=false ;;
     -h|--help)
-      sed -n '2,12p' "$0"; exit 0 ;;
+      sed -n '2,15p' "$0"; exit 0 ;;
     *) echo "Unknown arg: $arg" >&2; exit 2 ;;
   esac
 done
@@ -34,54 +41,82 @@ if [[ ! -f "$REGISTRY" ]]; then
   exit 1
 fi
 
-# Parse JSON with python (always available with skills CLI) — no jq dependency
-skills_count=$(python3 -c "import json,sys; d=json.load(open('$REGISTRY')); print(d['count'])")
-echo "→ Found $skills_count skills in $REGISTRY"
+echo "→ Registry: $REGISTRY"
 echo
 
-installed=0
-skipped=0
-failed=0
+# Pilot the whole loop from Python to avoid bash read/process-substitution bugs.
+PYTHON_RUNNER="$(cat <<PYEOF
+import json, subprocess, sys
 
-while IFS=$'\t' read -r name owner repo source; do
-  if [[ -n "$ONLY" && "$name" != "$ONLY" ]]; then
-    continue
-  fi
+REGISTRY = "$REGISTRY"
+ONLY = "$ONLY"
+ALL = "$(echo $ALL)" == "true"
+DRY_RUN = "$(echo $DRY_RUN)" == "true"
+YES = "$(echo $YES)" == "true"
+GLOBAL = "$(echo $GLOBAL)" == "true"
 
-  if [[ "$owner" == "TBD" ]]; then
-    if [[ "$ALL" == true ]]; then
-      echo "⚠ $name — TBD upstream, attempting anyway"
-    else
-      echo "⊘ $name — TBD upstream, skipped (use --all to attempt)"
-      skipped=$((skipped+1))
-      continue
-    fi
-  fi
+with open(REGISTRY) as f:
+    reg = json.load(f)
 
-  cmd="npx skills add https://github.com/$owner/$repo --skill $name"
-  echo "+ $cmd"
+skills = reg["skills"]
+print(f"→ Found {len(skills)} skills")
+print()
 
-  if [[ "$DRY_RUN" == true ]]; then
-    echo "  (dry-run: skipped)"
-    continue
-  fi
+installed = 0
+skipped = 0
+failed = 0
 
-  if npx skills add "https://github.com/$owner/$repo" --skill "$name" >/dev/null 2>&1; then
-    echo "  ✓ installed"
-    installed=$((installed+1))
-  else
-    echo "  ✗ failed"
-    failed=$((failed+1))
-  fi
-done < <(python3 -c "
-import json, sys
-with open('$REGISTRY') as f:
-    d = json.load(f)
-for s in d['skills']:
-    src = s.get('source', '')
-    print(f\"{s['name']}\t{s['owner']}\t{s['repo']}\t{src}\")
-")
+for s in skills:
+    name = s["name"]
+    owner = s["owner"]
+    repo = s["repo"]
+    source = s.get("source", "")
 
-echo
-echo "Done. installed=$installed skipped=$skipped failed=$failed"
-[[ $failed -eq 0 ]] || exit 1
+    if ONLY and name != ONLY:
+        continue
+
+    if owner == "TBD":
+        if ALL:
+            print(f"⚠ {name} — TBD upstream, attempting anyway")
+        else:
+            print(f"⊘ {name} — TBD upstream, skipped (use --all to attempt)")
+            skipped += 1
+            continue
+
+    flags = []
+    if YES:
+        flags.append("-y")
+    if GLOBAL:
+        flags.append("-g")
+
+    cmd = ["npx", "skills", "add", f"https://github.com/{owner}/{repo}", "--skill", name] + flags
+    print(f"+ {' '.join(cmd)}")
+
+    if DRY_RUN:
+        print("  (dry-run: skipped)")
+        continue
+
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+        if result.returncode == 0:
+            print("  ✓ installed")
+            installed += 1
+        else:
+            err = result.stderr.strip().splitlines()
+            tail = err[-1] if err else "unknown error"
+            print(f"  ✗ failed: {tail}")
+            failed += 1
+    except subprocess.TimeoutExpired:
+        print("  ✗ timeout")
+        failed += 1
+    except Exception as e:
+        print(f"  ✗ exception: {e}")
+        failed += 1
+
+print()
+print(f"Done. installed={installed} skipped={skipped} failed={failed}")
+sys.exit(0 if failed == 0 else 1)
+PYEOF
+)"
+
+python3 -c "$PYTHON_RUNNER"
