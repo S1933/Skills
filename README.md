@@ -14,7 +14,7 @@ We don't install both collections in full to avoid rule collisions and duplicate
 ## Install
 
 ```bash
-# Install all 26 verified skills
+# Install all 27 verified skills
 ./install.sh
 
 # Preview without executing
@@ -28,7 +28,7 @@ We don't install both collections in full to avoid rule collisions and duplicate
 
 ## Registry
 
-[`registry.json`](./registry.json) — flat list of 26 entries:
+[`registry.json`](./registry.json) — flat list of 27 entries:
 
 ```json
 {
@@ -49,6 +49,7 @@ Run `./validate-registry.sh` to assert `count === skills.length`, no duplicates,
 |---|---:|---|
 | `mattpocock/skills` | 15 | Engineering discipline |
 | `obra/superpowers` | 8 | Execution / orchestration |
+| `multica-ai/andrej-karpathy-skills` | 1 | Coding discipline (anti-overengineering) |
 | `juliusbrussee/caveman` | 1 | Output style |
 | `ayghri/i-have-adhd` | 1 | Output style |
 | `ksimback/tech-debt-skill` | 1 | Audit |
@@ -73,7 +74,7 @@ Versioning the `SKILL.md` content forced constant re-syncs with upstream. The ma
 ```
 .
 ├── README.md
-├── registry.json                       # 26 skills, declarative
+├── registry.json                       # 27 skills, declarative
 ├── install.sh                          # one-shot installer
 ├── validate-registry.sh                # integrity guard
 └── .github/

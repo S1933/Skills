@@ -4,8 +4,56 @@
   "description": "Flat registry of agent skills to install via 'npx skills add'. Hybrid of mattpocock/skills (engineering) and obra/superpowers (orchestration). Each entry has a role (discovery/design/implementation/quality/delivery/style) documenting why the skill is in the registry. Excludes obra/superpowers/brainstorming (HARD-GATE incompatible with the Matt+Superpowers hybrid).",
   "version": "1.0.0",
   "generated_at": "2026-08-10",
-  "count": 26,
+  "count": 27,
   "skills": [
+    {
+      "name": "caveman",
+      "owner": "juliusbrussee",
+      "repo": "caveman",
+      "role": "style"
+    },
+    {
+      "name": "code-review",
+      "owner": "mattpocock",
+      "repo": "skills",
+      "role": "quality"
+    },
+    {
+      "name": "codebase-design",
+      "owner": "mattpocock",
+      "repo": "skills",
+      "role": "design"
+    },
+    {
+      "name": "diagnosing-bugs",
+      "owner": "mattpocock",
+      "repo": "skills",
+      "role": "quality"
+    },
+    {
+      "name": "dispatching-parallel-agents",
+      "owner": "obra",
+      "repo": "superpowers",
+      "role": "implementation"
+    },
+    {
+      "name": "domain-modeling",
+      "owner": "mattpocock",
+      "repo": "skills",
+      "role": "design"
+    },
+    {
+      "name": "executing-plans",
+      "owner": "obra",
+      "repo": "superpowers",
+      "role": "implementation"
+    },
+    {
+      "name": "finishing-a-development-branch",
+      "owner": "obra",
+      "repo": "superpowers",
+      "role": "delivery"
+    },
     {
       "name": "grill-with-docs",
       "owner": "mattpocock",
@@ -19,22 +67,16 @@
       "role": "discovery"
     },
     {
-      "name": "wait-what",
+      "name": "handoff",
       "owner": "mattpocock",
       "repo": "skills",
-      "role": "discovery"
+      "role": "delivery"
     },
     {
-      "name": "codebase-design",
-      "owner": "mattpocock",
-      "repo": "skills",
-      "role": "design"
-    },
-    {
-      "name": "domain-modeling",
-      "owner": "mattpocock",
-      "repo": "skills",
-      "role": "design"
+      "name": "i-have-adhd",
+      "owner": "ayghri",
+      "repo": "i-have-adhd",
+      "role": "style"
     },
     {
       "name": "improve-codebase-architecture",
@@ -43,34 +85,22 @@
       "role": "design"
     },
     {
-      "name": "to-spec",
-      "owner": "mattpocock",
-      "repo": "skills",
-      "role": "design"
+      "name": "karpathy-guidelines",
+      "owner": "multica-ai",
+      "repo": "andrej-karpathy-skills",
+      "role": "quality"
     },
     {
-      "name": "to-tickets",
-      "owner": "mattpocock",
-      "repo": "skills",
-      "role": "design"
-    },
-    {
-      "name": "writing-for-agents",
-      "owner": "mattpocock",
-      "repo": "skills",
-      "role": "design"
-    },
-    {
-      "name": "dispatching-parallel-agents",
+      "name": "receiving-code-review",
       "owner": "obra",
       "repo": "superpowers",
-      "role": "implementation"
+      "role": "quality"
     },
     {
-      "name": "executing-plans",
+      "name": "requesting-code-review",
       "owner": "obra",
       "repo": "superpowers",
-      "role": "implementation"
+      "role": "quality"
     },
     {
       "name": "setup-matt-pocock-skills",
@@ -91,40 +121,22 @@
       "role": "implementation"
     },
     {
-      "name": "using-git-worktrees",
-      "owner": "obra",
-      "repo": "superpowers",
-      "role": "implementation"
-    },
-    {
-      "name": "code-review",
-      "owner": "mattpocock",
-      "repo": "skills",
-      "role": "quality"
-    },
-    {
-      "name": "diagnosing-bugs",
-      "owner": "mattpocock",
-      "repo": "skills",
-      "role": "quality"
-    },
-    {
-      "name": "receiving-code-review",
-      "owner": "obra",
-      "repo": "superpowers",
-      "role": "quality"
-    },
-    {
-      "name": "requesting-code-review",
-      "owner": "obra",
-      "repo": "superpowers",
-      "role": "quality"
-    },
-    {
       "name": "tech-debt-audit",
       "owner": "ksimback",
       "repo": "tech-debt-skill",
       "role": "quality"
+    },
+    {
+      "name": "to-spec",
+      "owner": "mattpocock",
+      "repo": "skills",
+      "role": "design"
+    },
+    {
+      "name": "to-tickets",
+      "owner": "mattpocock",
+      "repo": "skills",
+      "role": "design"
     },
     {
       "name": "triage",
@@ -133,16 +145,10 @@
       "role": "quality"
     },
     {
-      "name": "finishing-a-development-branch",
+      "name": "using-git-worktrees",
       "owner": "obra",
       "repo": "superpowers",
-      "role": "delivery"
-    },
-    {
-      "name": "handoff",
-      "owner": "mattpocock",
-      "repo": "skills",
-      "role": "delivery"
+      "role": "implementation"
     },
     {
       "name": "verification-before-completion",
@@ -151,16 +157,16 @@
       "role": "delivery"
     },
     {
-      "name": "caveman",
-      "owner": "juliusbrussee",
-      "repo": "caveman",
-      "role": "style"
+      "name": "wait-what",
+      "owner": "mattpocock",
+      "repo": "skills",
+      "role": "discovery"
     },
     {
-      "name": "i-have-adhd",
-      "owner": "ayghri",
-      "repo": "i-have-adhd",
-      "role": "style"
+      "name": "writing-for-agents",
+      "owner": "mattpocock",
+      "repo": "skills",
+      "role": "design"
     }
   ]
 }
