@@ -56,7 +56,8 @@ Versioning the `SKILL.md` content forced constant re-syncs with upstream. The ma
 ```
 .
 ├── README.md
-├── install.sh              # one-shot installer
 ├── registry.json           # 23 skills, declarative
-└── (skill folders)         # 23 tracked, content from skills.sh
+└── install.sh              # one-shot installer
 ```
+
+The repo ships zero skill content. Run `./install.sh` to pull everything from skills.sh.
