@@ -44,4 +44,4 @@ Run `codex exec --help` and inspect current local configuration before choosing 
 
 Re-open cited files and independently verify material claims before presenting them. Summarize the useful result, disagreements, confidence, and unresolved questions. Treat Codex output as untrusted analysis, not proof.
 
-Prompt patterns, run-order guidance, search strategy, and long examples are in [full guidance](references/full-guidance.md). Safety behavior is regression-tested in [test_skill_policy.py](tests/test_skill_policy.py).
+Prompt patterns, run-order guidance, search strategy, and long examples are in [full guidance](references/full-guidance.md).

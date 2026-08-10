@@ -1,6 +1,4 @@
-.local/*
-!.local/README.md
-!.local/skills-environment.example.yaml
+.local/
 
 __pycache__/
 *.py[cod]
