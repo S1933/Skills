@@ -5,7 +5,7 @@ A declarative manifest of agent skills. No skill content is versioned — only `
 ## Install
 
 ```bash
-./install.sh                  # install all 27 skills
+./install.sh                  # install all 28 skills
 ./install.sh --dry-run        # preview
 ./install.sh --only tdd       # install one
 ./validate-registry.sh        # assert count === skills.length, valid roles
@@ -17,7 +17,7 @@ Matt Pocock (engineering discipline) × obra/superpowers (execution/orchestratio
 
 | Source | Count | Role |
 |---|---:|---|
-| `mattpocock/skills` | 15 | Engineering (grilling, TDD, diagnosing, code review, codebase-design) |
+| `mattpocock/skills` | 16 | Engineering (grilling, TDD, diagnosing, code review, codebase-design) |
 | `obra/superpowers` | 8 | Execution (worktrees, subagents, dispatch, verification, finishing) |
 | `multica-ai/andrej-karpathy-skills` | 1 | Coding discipline (anti-overengineering) |
 | `anthropics/knowledge-work-plugins` | 1 | Tech debt audit |
@@ -46,7 +46,7 @@ Skills with a HARD-GATE upstream (e.g. `obra/superpowers/brainstorming`) are exc
 ```
 .
 ├── README.md
-├── registry.json          # 27 entries
+├── registry.json          # 28 entries
 ├── install.sh
 ├── validate-registry.sh
 └── .github/workflows/     # CI on push/PR + weekly upstream check

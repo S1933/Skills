@@ -4,7 +4,7 @@
   "description": "Flat registry of agent skills to install via 'npx skills add'. Hybrid of mattpocock/skills (engineering) and obra/superpowers (orchestration). Each entry has a role (discovery/design/implementation/quality/delivery/style) documenting why the skill is in the registry. Excludes obra/superpowers/brainstorming (HARD-GATE incompatible with the Matt+Superpowers hybrid).",
   "version": "1.0.0",
   "generated_at": "2026-08-10",
-  "count": 27,
+  "count": 28,
   "skills": [
     {
       "name": "caveman",
@@ -89,6 +89,12 @@
       "owner": "multica-ai",
       "repo": "andrej-karpathy-skills",
       "role": "quality"
+    },
+    {
+      "name": "prototype",
+      "owner": "mattpocock",
+      "repo": "skills",
+      "role": "design"
     },
     {
       "name": "receiving-code-review",
