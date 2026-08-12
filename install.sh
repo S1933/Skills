@@ -123,22 +123,20 @@ for s in skills:
     owner = s["owner"]
     repo = s["repo"]
 
-    cmd = ["npx", "skills", "add", f"https://github.com/{owner}/{repo}", "--skill", name, "-y"]
-    print(f"+ {' '.join(cmd)}")
+    cmd = ["npx", "--yes", "skills", "add", f"https://github.com/{owner}/{repo}", "--skill", name, "-y"]
+    print(f"+ {' '.join(cmd)}", flush=True)
 
     if DRY_RUN:
         print("  (dry-run: skipped)")
         continue
 
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+        result = subprocess.run(cmd, timeout=120)
         if result.returncode == 0:
             print("  ✓ installed")
             installed += 1
         else:
-            err = result.stderr.strip().splitlines()
-            tail = err[-1] if err else "unknown error"
-            print(f"  ✗ failed: {tail}")
+            print(f"  ✗ failed (exit code {result.returncode})")
             failed += 1
     except subprocess.TimeoutExpired:
         print("  ✗ timeout")
