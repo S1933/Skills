@@ -1,14 +1,11 @@
 #!/usr/bin/env bash
-# install.sh — Install all skills listed in registry.json via 'npx skills add'.
+# install.sh — Wipe locally installed skills (gitignore-respecting), regenerate
+# skills-lock.json, then install every skill declared in registry.json via
+# 'npx skills add'.
 #
 # Usage:
-#   ./install.sh                  # install everything (skip TBD entries by default)
-#   ./install.sh --all            # also attempt TBD entries (will warn/error)
-#   ./install.sh --dry-run        # show what would run, don't execute
-#   ./install.sh --only <name>    # install a single skill by name
-#   ./install.sh --reinstall      # wipe locally installed skills (gitignore-respecting),
-#                                 # regenerate skills-lock.json, then install everything
-#   ./install.sh --global         # install globally (skip if agent doesn't support it)
+#   ./install.sh            # wipe + install everything
+#   ./install.sh --dry-run  # show what would happen, do nothing
 #
 # Replaces the old model of versioning SKILL.md content with declarative
 # installation from skills.sh manifests.
@@ -21,104 +18,82 @@ INSTALL_ROOT="$HOME/.agents/skills/.agents/skills"
 LOCKFILE="$(dirname "$0")/skills-lock.json"
 
 DRY_RUN=false
-ALL=false
-ONLY=""
-GLOBAL=false
-YES=true
-REINSTALL=false
+case "${1:-}" in
+  --dry-run)  DRY_RUN=true ;;
+  -h|--help)
+    sed -n '2,9p' "$0"; exit 0 ;;
+  "")         ;;
+  *)
+    echo "ERROR: unknown arg: $1" >&2
+    echo "Usage: $0 [--dry-run]" >&2
+    exit 2
+    ;;
+esac
 
-# Argument parser — use while + shift instead of `for arg in "$@"` so we can
-# consume arguments with their values (e.g. --only NAME).
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-    --dry-run)     DRY_RUN=true; YES=false; shift ;;
-    --all)         ALL=true; shift ;;
-    --reinstall)   REINSTALL=true; shift ;;
-    --only)
-      [[ $# -ge 2 ]] || { echo "ERROR: --only requires a skill name" >&2; exit 2; }
-      ONLY="$2"
-      shift 2
-      ;;
-    --only=*)      ONLY="${1#--only=}"; shift ;;
-    --global|-g)   GLOBAL=true; shift ;;
-    --project|-p)  GLOBAL=false; shift ;;
-    --no-yes)      YES=false; shift ;;
-    -h|--help)
-      sed -n '2,18p' "$0"; exit 0 ;;
-    *)
-      echo "ERROR: unknown arg: $1" >&2
-      echo "Usage: $0 [--dry-run] [--all] [--reinstall] [--only NAME] [--global] [--no-yes]" >&2
-      exit 2
-      ;;
-  esac
-done
+# ---- Wipe installed skills (gitignore-respecting)
+if [[ -d "$INSTALL_ROOT" ]]; then
+  declare -a KEEP_PATTERNS=()
+  if [[ -f "$GITIGNORE" ]]; then
+    while IFS= read -r raw; do
+      line="${raw%%#*}"
+      line="$(echo "$line" | xargs || true)"
+      [[ -z "$line" ]] && continue
+      KEEP_PATTERNS+=("${line%/}")
+    done < "$GITIGNORE"
+  fi
 
-# ---- Reinstall phase: wipe installed skills (gitignore-respecting) + lockfile
-if $REINSTALL; then
-  if [[ -d "$INSTALL_ROOT" ]]; then
-    # Build keep-pattern list from .gitignore (anchored /foo/ entries + bare names).
-    declare -a KEEP_PATTERNS=()
-    if [[ -f "$GITIGNORE" ]]; then
-      while IFS= read -r raw; do
-        line="${raw%%#*}"
-        line="$(echo "$line" | xargs || true)"
-        [[ -z "$line" ]] && continue
-        KEEP_PATTERNS+=("${line%/}")
-      done < "$GITIGNORE"
-    fi
-
-    should_keep() {
-      local path="$1"
-      for p in "${KEEP_PATTERNS[@]}"; do
-        if [[ "$p" == /* ]]; then
-          local rel="${path#$INSTALL_ROOT}"
-          [[ "$rel" == "$p"* ]] && return 0
-        else
-          [[ "$path" == *"/$p"* || "$(basename "$path")" == "$p" ]] && return 0
-        fi
-      done
-      return 1
-    }
-
-    echo "→ Wiping installed skills at $INSTALL_ROOT (gitignore-respecting)"
-    deleted=0
-    kept=0
-    for entry in "$INSTALL_ROOT"/*; do
-      [[ -d "$entry" ]] || continue
-      name="$(basename "$entry")"
-      if should_keep "$entry"; then
-        echo "  ⊘ keep   $name  (matches .gitignore)"
-        kept=$((kept + 1))
-        continue
-      fi
-      if $DRY_RUN; then
-        echo "  ~ dry-run delete $name"
+  should_keep() {
+    local path="$1"
+    for p in "${KEEP_PATTERNS[@]}"; do
+      if [[ "$p" == /* ]]; then
+        local rel="${path#$INSTALL_ROOT}"
+        [[ "$rel" == "$p"* ]] && return 0
       else
-        rm -rf -- "$entry"
-        echo "  ✗ delete $name"
+        [[ "$path" == *"/$p"* || "$(basename "$path")" == "$p" ]] && return 0
       fi
-      deleted=$((deleted + 1))
     done
-    echo
-    echo "→ Removed $deleted skill(s), kept $kept"
-    echo
-  else
-    echo "→ No installed skills at $INSTALL_ROOT, nothing to wipe"
-    echo
-  fi
+    return 1
+  }
 
-  # Always regenerate the lockfile on --reinstall so it reflects registry.json
-  if [[ -f "$LOCKFILE" ]]; then
-    if $DRY_RUN; then
-      echo "→ (dry-run) would remove $LOCKFILE"
-    else
-      rm -f "$LOCKFILE"
-      echo "→ Removed $LOCKFILE"
+  echo "→ Wiping installed skills at $INSTALL_ROOT (gitignore-respecting)"
+  deleted=0
+  kept=0
+  for entry in "$INSTALL_ROOT"/*; do
+    [[ -d "$entry" ]] || continue
+    name="$(basename "$entry")"
+    if should_keep "$entry"; then
+      echo "  ⊘ keep   $name  (matches .gitignore)"
+      kept=$((kept + 1))
+      continue
     fi
-  fi
+    if $DRY_RUN; then
+      echo "  ~ dry-run delete $name"
+    else
+      rm -rf -- "$entry"
+      echo "  ✗ delete $name"
+    fi
+    deleted=$((deleted + 1))
+  done
+  echo
+  echo "→ Removed $deleted skill(s), kept $kept"
+  echo
+else
+  echo "→ No installed skills at $INSTALL_ROOT, nothing to wipe"
   echo
 fi
 
+# ---- Regenerate lockfile so it reflects registry.json
+if [[ -f "$LOCKFILE" ]]; then
+  if $DRY_RUN; then
+    echo "→ (dry-run) would remove $LOCKFILE"
+  else
+    rm -f "$LOCKFILE"
+    echo "→ Removed $LOCKFILE"
+  fi
+fi
+echo
+
+# ---- Install everything from registry.json
 if [[ ! -f "$REGISTRY" ]]; then
   echo "ERROR: registry not found at $REGISTRY" >&2
   exit 1
@@ -127,16 +102,11 @@ fi
 echo "→ Registry: $REGISTRY"
 echo
 
-# Pilot the whole loop from Python to avoid bash read/process-substitution bugs.
 PYTHON_RUNNER="$(cat <<PYEOF
 import json, subprocess, sys
 
 REGISTRY = "$REGISTRY"
-ONLY = "$ONLY"
-ALL = "$(echo $ALL)" == "true"
 DRY_RUN = "$(echo $DRY_RUN)" == "true"
-YES = "$(echo $YES)" == "true"
-GLOBAL = "$(echo $GLOBAL)" == "true"
 
 with open(REGISTRY) as f:
     reg = json.load(f)
@@ -146,33 +116,14 @@ print(f"→ Found {len(skills)} skills")
 print()
 
 installed = 0
-skipped = 0
 failed = 0
 
 for s in skills:
     name = s["name"]
     owner = s["owner"]
     repo = s["repo"]
-    source = s.get("source", "")
 
-    if ONLY and name != ONLY:
-        continue
-
-    if owner == "TBD":
-        if ALL:
-            print(f"⚠ {name} — TBD upstream, attempting anyway")
-        else:
-            print(f"⊘ {name} — TBD upstream, skipped (use --all to attempt)")
-            skipped += 1
-            continue
-
-    flags = []
-    if YES:
-        flags.append("-y")
-    if GLOBAL:
-        flags.append("-g")
-
-    cmd = ["npx", "skills", "add", f"https://github.com/{owner}/{repo}", "--skill", name] + flags
+    cmd = ["npx", "skills", "add", f"https://github.com/{owner}/{repo}", "--skill", name, "-y"]
     print(f"+ {' '.join(cmd)}")
 
     if DRY_RUN:
@@ -197,7 +148,7 @@ for s in skills:
         failed += 1
 
 print()
-print(f"Done. installed={installed} skipped={skipped} failed={failed}")
+print(f"Done. installed={installed} failed={failed}")
 sys.exit(0 if failed == 0 else 1)
 PYEOF
 )"
