@@ -1,15 +1,16 @@
 # S1933 skills registry
 
-A declarative manifest of agent skills. No skill content is versioned — only `{name, owner, repo, role}` entries. Run `./install.sh` to pull everything from [skills.sh](https://skills.sh/).
+A declarative manifest of agent skills. No skill content is versioned — only `{name, owner, repo, role}` entries. Run `./install.sh` to wipe the local install and pull everything from [skills.sh](https://skills.sh/).
 
 ## Install
 
 ```bash
-./install.sh                  # install all 28 skills
-./install.sh --dry-run        # preview
-./install.sh --only tdd       # install one
-./validate-registry.sh        # assert count === skills.length, valid roles
+./install.sh            # wipe local skills (gitignore-respecting) + install everything
+./install.sh --dry-run  # preview without touching anything
+./validate-registry.sh  # assert count === skills.length, valid roles
 ```
+
+The script is idempotent: every run removes previously installed skills, regenerates `skills-lock.json`, then reinstalls the full registry. Skills whose path matches `.gitignore` are preserved on wipe.
 
 ## Hybrid
 
@@ -23,6 +24,7 @@ Matt Pocock (engineering discipline) × obra/superpowers (execution/orchestratio
 | `anthropics/knowledge-work-plugins` | 1 | Tech debt audit |
 | `juliusbrussee/caveman` | 1 | Output style |
 | `ayghri/i-have-adhd` | 1 | Output style |
+| `humanlayer/skills` | 1 | Visual explanation (show-me) |
 
 ## Registry
 
@@ -38,7 +40,7 @@ Skills with a HARD-GATE upstream (e.g. `obra/superpowers/brainstorming`) are exc
 
 1. Confirm upstream on [skills.sh](https://skills.sh/).
 2. Edit `registry.json` — add `{name, owner, repo, role}`.
-3. `./install.sh --dry-run --only=<name>` then `./validate-registry.sh`.
+3. `./install.sh --dry-run` to preview, then `./validate-registry.sh` to assert integrity.
 4. Push — CI re-runs both checks. `verify-upstreams.yml` runs weekly.
 
 ## Layout
@@ -46,8 +48,8 @@ Skills with a HARD-GATE upstream (e.g. `obra/superpowers/brainstorming`) are exc
 ```
 .
 ├── README.md
-├── registry.json          # 28 entries
-├── install.sh
+├── registry.json          # 29 entries
+├── install.sh             # wipe (gitignore-respecting) + install
 ├── validate-registry.sh
 └── .github/workflows/     # CI on push/PR + weekly upstream check
 ```
