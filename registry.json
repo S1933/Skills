@@ -2,9 +2,9 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "name": "s1933-skills-registry",
   "description": "Flat registry of agent skills to install via 'npx skills add'. Hybrid of mattpocock/skills (engineering) and obra/superpowers (orchestration). Each entry has a role (discovery/design/implementation/quality/delivery/style) documenting why the skill is in the registry. Excludes obra/superpowers/brainstorming (HARD-GATE incompatible with the Matt+Superpowers hybrid).",
-  "version": "1.0.0",
-  "generated_at": "2026-08-10",
-  "count": 28,
+  "version": "1.0.1",
+  "generated_at": "2026-08-13",
+  "count": 29,
   "skills": [
     {
       "name": "caveman",
@@ -113,6 +113,12 @@
       "owner": "mattpocock",
       "repo": "skills",
       "role": "setup"
+    },
+    {
+      "name": "show-me",
+      "owner": "humanlayer",
+      "repo": "skills",
+      "role": "style"
     },
     {
       "name": "subagent-driven-development",
