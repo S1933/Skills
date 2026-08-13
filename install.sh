@@ -6,6 +6,8 @@
 #   ./install.sh --all            # also attempt TBD entries (will warn/error)
 #   ./install.sh --dry-run        # show what would run, don't execute
 #   ./install.sh --only <name>    # install a single skill by name
+#   ./install.sh --reinstall      # wipe locally installed skills (gitignore-respecting),
+#                                 # regenerate skills-lock.json, then install everything
 #   ./install.sh --global         # install globally (skip if agent doesn't support it)
 #
 # Replaces the old model of versioning SKILL.md content with declarative
@@ -14,37 +16,108 @@
 set -uo pipefail
 
 REGISTRY="${REGISTRY:-$(dirname "$0")/registry.json}"
+GITIGNORE="$(dirname "$0")/.gitignore"
+INSTALL_ROOT="$HOME/.agents/skills/.agents/skills"
+LOCKFILE="$(dirname "$0")/skills-lock.json"
 
 DRY_RUN=false
 ALL=false
 ONLY=""
 GLOBAL=false
 YES=true
+REINSTALL=false
 
 # Argument parser — use while + shift instead of `for arg in "$@"` so we can
 # consume arguments with their values (e.g. --only NAME).
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --dry-run)    DRY_RUN=true; YES=false; shift ;;
-    --all)        ALL=true; shift ;;
+    --dry-run)     DRY_RUN=true; YES=false; shift ;;
+    --all)         ALL=true; shift ;;
+    --reinstall)   REINSTALL=true; shift ;;
     --only)
       [[ $# -ge 2 ]] || { echo "ERROR: --only requires a skill name" >&2; exit 2; }
       ONLY="$2"
       shift 2
       ;;
-    --only=*)     ONLY="${1#--only=}"; shift ;;
-    --global|-g)  GLOBAL=true; shift ;;
-    --project|-p) GLOBAL=false; shift ;;
-    --no-yes)     YES=false; shift ;;
+    --only=*)      ONLY="${1#--only=}"; shift ;;
+    --global|-g)   GLOBAL=true; shift ;;
+    --project|-p)  GLOBAL=false; shift ;;
+    --no-yes)      YES=false; shift ;;
     -h|--help)
-      sed -n '2,15p' "$0"; exit 0 ;;
+      sed -n '2,18p' "$0"; exit 0 ;;
     *)
       echo "ERROR: unknown arg: $1" >&2
-      echo "Usage: $0 [--dry-run] [--all] [--only NAME] [--global] [--no-yes]" >&2
+      echo "Usage: $0 [--dry-run] [--all] [--reinstall] [--only NAME] [--global] [--no-yes]" >&2
       exit 2
       ;;
   esac
 done
+
+# ---- Reinstall phase: wipe installed skills (gitignore-respecting) + lockfile
+if $REINSTALL; then
+  if [[ -d "$INSTALL_ROOT" ]]; then
+    # Build keep-pattern list from .gitignore (anchored /foo/ entries + bare names).
+    declare -a KEEP_PATTERNS=()
+    if [[ -f "$GITIGNORE" ]]; then
+      while IFS= read -r raw; do
+        line="${raw%%#*}"
+        line="$(echo "$line" | xargs || true)"
+        [[ -z "$line" ]] && continue
+        KEEP_PATTERNS+=("${line%/}")
+      done < "$GITIGNORE"
+    fi
+
+    should_keep() {
+      local path="$1"
+      for p in "${KEEP_PATTERNS[@]}"; do
+        if [[ "$p" == /* ]]; then
+          local rel="${path#$INSTALL_ROOT}"
+          [[ "$rel" == "$p"* ]] && return 0
+        else
+          [[ "$path" == *"/$p"* || "$(basename "$path")" == "$p" ]] && return 0
+        fi
+      done
+      return 1
+    }
+
+    echo "→ Wiping installed skills at $INSTALL_ROOT (gitignore-respecting)"
+    deleted=0
+    kept=0
+    for entry in "$INSTALL_ROOT"/*; do
+      [[ -d "$entry" ]] || continue
+      name="$(basename "$entry")"
+      if should_keep "$entry"; then
+        echo "  ⊘ keep   $name  (matches .gitignore)"
+        kept=$((kept + 1))
+        continue
+      fi
+      if $DRY_RUN; then
+        echo "  ~ dry-run delete $name"
+      else
+        rm -rf -- "$entry"
+        echo "  ✗ delete $name"
+      fi
+      deleted=$((deleted + 1))
+    done
+    echo
+    echo "→ Removed $deleted skill(s), kept $kept"
+    echo
+  else
+    echo "→ No installed skills at $INSTALL_ROOT, nothing to wipe"
+    echo
+  fi
+
+  # Always regenerate the lockfile on --reinstall so it reflects registry.json
+  if [[ -f "$LOCKFILE" ]]; then
+    if $DRY_RUN; then
+      echo "→ (dry-run) would remove $LOCKFILE"
+    else
+      rm -f "$LOCKFILE"
+      echo "→ Removed $LOCKFILE"
+    fi
+  fi
+  echo
+fi
 
 if [[ ! -f "$REGISTRY" ]]; then
   echo "ERROR: registry not found at $REGISTRY" >&2
