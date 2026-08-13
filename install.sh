@@ -1,21 +1,26 @@
 #!/usr/bin/env bash
-# install.sh — Wipe locally installed skills (gitignore-respecting), regenerate
-# skills-lock.json, then install every skill declared in registry.json via
-# 'npx skills add'.
+# install.sh — Wipe installed skills (gitignore-respecting), then install every
+# skill declared in registry.json via 'npx skills add --global'.
 #
 # Usage:
 #   ./install.sh            # wipe + install everything
 #   ./install.sh --dry-run  # show what would happen, do nothing
+#
+# This repo IS the global skills directory: ~/.claude/skills is a symlink to
+# ~/.agents/skills, which is this checkout. So skills must be installed with
+# 'skills add -g', whose global root is exactly ~/.agents/skills — the repo
+# root. Without -g the CLI detects a project (this repo has a .git) and nests
+# everything under ./.agents/skills + ./.claude/skills instead.
 #
 # Replaces the old model of versioning SKILL.md content with declarative
 # installation from skills.sh manifests.
 
 set -uo pipefail
 
-REGISTRY="${REGISTRY:-$(dirname "$0")/registry.json}"
-GITIGNORE="$(dirname "$0")/.gitignore"
-INSTALL_ROOT="$HOME/.agents/skills/.agents/skills"
-LOCKFILE="$(dirname "$0")/skills-lock.json"
+REPO_ROOT="$(cd "$(dirname "$0")" && pwd)"
+REGISTRY="${REGISTRY:-$REPO_ROOT/registry.json}"
+GITIGNORE="$REPO_ROOT/.gitignore"
+INSTALL_ROOT="$REPO_ROOT"
 
 DRY_RUN=false
 case "${1:-}" in
@@ -60,6 +65,8 @@ if [[ -d "$INSTALL_ROOT" ]]; then
   kept=0
   for entry in "$INSTALL_ROOT"/*; do
     [[ -d "$entry" ]] || continue
+    # Only ever delete actual skill directories, never repo tooling.
+    [[ -f "$entry/SKILL.md" ]] || continue
     name="$(basename "$entry")"
     if should_keep "$entry"; then
       echo "  ⊘ keep   $name  (matches .gitignore)"
@@ -82,15 +89,16 @@ else
   echo
 fi
 
-# ---- Regenerate lockfile so it reflects registry.json
-if [[ -f "$LOCKFILE" ]]; then
+# ---- Drop artifacts left behind by project-scoped installs (pre -g)
+for stale in "$REPO_ROOT/.agents" "$REPO_ROOT/.claude" "$REPO_ROOT/skills-lock.json"; do
+  [[ -e "$stale" ]] || continue
   if $DRY_RUN; then
-    echo "→ (dry-run) would remove $LOCKFILE"
+    echo "→ (dry-run) would remove stale artifact $stale"
   else
-    rm -f "$LOCKFILE"
-    echo "→ Removed $LOCKFILE"
+    rm -rf -- "$stale"
+    echo "→ Removed stale artifact $stale"
   fi
-fi
+done
 echo
 
 # ---- Install everything from registry.json
@@ -123,7 +131,8 @@ for s in skills:
     owner = s["owner"]
     repo = s["repo"]
 
-    cmd = ["npx", "--yes", "skills", "add", f"https://github.com/{owner}/{repo}", "--skill", name, "-y"]
+    # -g installs into ~/.agents/skills/<name>, i.e. the repo root.
+    cmd = ["npx", "--yes", "skills", "add", f"https://github.com/{owner}/{repo}", "--skill", name, "-g", "-y"]
     print(f"+ {' '.join(cmd)}", flush=True)
 
     if DRY_RUN:
