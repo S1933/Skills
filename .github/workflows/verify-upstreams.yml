@@ -44,43 +44,60 @@ jobs:
               except Exception as e:
                   return 0, str(e).encode()
 
-          def skill_exists(owner, repo, name):
-              # Strategy 1: GitHub contents API (works with token, also rate-limited without)
-              for base in (
-                  f"https://api.github.com/repos/{owner}/{repo}/contents/skills/{name}/SKILL.md",
-                  f"https://api.github.com/repos/{owner}/{repo}/contents/skills/engineering/{name}/SKILL.md",
-                  f"https://api.github.com/repos/{owner}/{repo}/contents/skills/productivity/{name}/SKILL.md",
-                  f"https://api.github.com/repos/{owner}/{repo}/contents/skills/in-progress/{name}/SKILL.md",
-                  f"https://api.github.com/repos/{owner}/{repo}/contents/skills/misc/{name}/SKILL.md",
-                  f"https://api.github.com/repos/{owner}/{repo}/contents/{name}/SKILL.md",
-              ):
-                  status, _ = api_get(base)
-                  if status == 200:
-                      return True
-                  if status == 404:
-                      continue
-                  if status == 403:
-                      # Rate-limited — bail out, fall through to raw
-                      break
-              # Strategy 2: raw.githubusercontent fallback (much higher rate limit, no auth needed)
-              for path in (
+          # Plausible directories inside an upstream repo for a SKILL.md, given a
+          # skill name. Both the Contents API and raw.githubusercontent will be
+          # probed against this list, in order, under each candidate branch.
+          def skill_path_candidates(name):
+              return (
                   f"skills/{name}/SKILL.md",
                   f"skills/engineering/{name}/SKILL.md",
                   f"skills/productivity/{name}/SKILL.md",
                   f"skills/in-progress/{name}/SKILL.md",
                   f"skills/misc/{name}/SKILL.md",
+                  f"plugins/{name}/skills/{name}/SKILL.md",
+                  f"plugins/{name}/skills/{name}-{name}/SKILL.md",
                   f"{name}/SKILL.md",
-              ):
-                  url = f"https://raw.githubusercontent.com/{owner}/{repo}/main/{path}"
-                  status, _ = api_get(url)
+              )
+
+          def default_branch(owner, repo):
+              """Return the repo's default branch (e.g. 'main' or 'master').
+              Falls back to 'main' on any error — raw.githubusercontent serves
+              both, and a HEAD fallback later catches the rest."""
+              status, body = api_get(f"https://api.github.com/repos/{owner}/{repo}")
+              if status == 200:
+                  try:
+                      return json.loads(body).get("default_branch") or "main"
+                  except Exception:
+                      pass
+              return "main"
+
+          def skill_exists(owner, repo, name):
+              paths = skill_path_candidates(name)
+              # Strategy 1: GitHub contents API (canonical, follows default branch).
+              # Including nested patterns like plugins/{name}/skills/{name}/.
+              # Token-auth bumps rate limit; raw fallback below covers unauth.
+              for path in paths:
+                  status, _ = api_get(
+                      f"https://api.github.com/repos/{owner}/{repo}/contents/{path}"
+                  )
                   if status == 200:
                       return True
-              # Strategy 3: try master branch
-              for path in (
-                  f"skills/{name}/SKILL.md",
-                  f"{name}/SKILL.md",
-              ):
-                  url = f"https://raw.githubusercontent.com/{owner}/{repo}/master/{path}"
+                  if status == 403:
+                      # Rate-limited — bail out, fall through to raw
+                      break
+              # Strategy 2: raw.githubusercontent against the default branch.
+              # Tested with both 'main' and 'master' for repos that flipped.
+              for branch in (default_branch(owner, repo), "main", "master"):
+                  for path in paths:
+                      url = f"https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{path}"
+                      status, _ = api_get(url)
+                      if status == 200:
+                          return True
+              # Strategy 3: raw against the symbolic HEAD (resolves whatever the
+              # repo currently advertises as default). Reliable when the CDN
+              # briefly serves stale results on /main/.
+              for path in paths:
+                  url = f"https://raw.githubusercontent.com/{owner}/{repo}/HEAD/{path}"
                   status, _ = api_get(url)
                   if status == 200:
                       return True
