@@ -29,7 +29,8 @@ Without `-g` the CLI detects a project (this repo has a `.git`) and nests everyt
 | [`juliusbrussee/caveman`](https://github.com/juliusbrussee/caveman) | 1 | Output style |
 | [`ayghri/i-have-adhd`](https://github.com/ayghri/i-have-adhd) | 1 | Output style |
 | [`humanlayer/skills`](https://github.com/humanlayer/skills) | 1 | Visual explanation (`show-me`) |
-| **Total** | **29** | |
+| [`hardikpandya/stop-slop`](https://github.com/hardikpandya/stop-slop) | 1 | Prose de-slop (remove AI tells) |
+| **Total** | **30** | |
 
 Matt Pocock (engineering discipline) × obra/superpowers (execution/orchestration). Both collections in full would create rule collisions and duplicates, so we picked the best of each. `obra/superpowers/brainstorming` is excluded — its HARD-GATE clashes with the hybrid.
 
@@ -44,8 +45,43 @@ Each `registry.json` entry has a `role` ∈ {`discovery`, `design`, `implementat
 | `implementation` | 5 | `tdd`, `dispatching-parallel-agents`, `executing-plans`, `subagent-driven-development`, `using-git-worktrees` |
 | `quality` | 7 | `code-review`, `diagnosing-bugs`, `karpathy-guidelines`, `receiving-code-review`, `requesting-code-review`, `tech-debt`, `triage` |
 | `delivery` | 3 | `finishing-a-development-branch`, `handoff`, `verification-before-completion` |
-| `style` | 3 | `caveman`, `i-have-adhd`, `show-me` — output shape |
+| `style` | 4 | `caveman`, `i-have-adhd`, `show-me`, `stop-slop` — output shape |
 | `setup` | 1 | `setup-matt-pocock-skills` — onboarding |
+
+## Full skill list
+
+| Skill | Source | Role | What it does |
+|---|---|---:|---|
+| `caveman` | juliusbrussee/caveman | style | Ultra-compressed output mode |
+| `code-review` | mattpocock/skills | quality | Review changes since a fixed point (commit/branch) |
+| `codebase-design` | mattpocock/skills | design | Shared vocabulary for designing deep modules |
+| `diagnosing-bugs` | mattpocock/skills | quality | Rigorous diagnosis loop for hard bugs/regressions |
+| `dispatching-parallel-agents` | obra/superpowers | implementation | Run independent tasks across parallel agents |
+| `domain-modeling` | mattpocock/skills | design | Build and sharpen a project's domain model |
+| `executing-plans` | obra/superpowers | implementation | Execute a written implementation plan |
+| `finishing-a-development-branch` | obra/superpowers | delivery | Wrap up a completed branch (verify, merge) |
+| `grill-with-docs` | mattpocock/skills | discovery | Sharpen a plan via docs-grounded interrogation |
+| `grilling` | mattpocock/skills | discovery | Interview the user relentlessly about a plan |
+| `handoff` | mattpocock/skills | delivery | Compact a conversation into a handoff document |
+| `i-have-adhd` | ayghri/i-have-adhd | style | Shape output for a reader with ADHD |
+| `improve-codebase-architecture` | mattpocock/skills | design | Scan for deepening opportunities in a codebase |
+| `karpathy-guidelines` | multica-ai/andrej-karpathy-skills | quality | Reduce common LLM coding mistakes |
+| `prototype` | mattpocock/skills | design | Throwaway prototype to answer a design question |
+| `receiving-code-review` | obra/superpowers | quality | Handle inbound review feedback correctly |
+| `requesting-code-review` | obra/superpowers | quality | Pre-commit review (security, quality gates) |
+| `setup-matt-pocock-skills` | mattpocock/skills | setup | Configure this repo for the engineering skills |
+| `show-me` | humanlayer/skills | style | Explain the current topic visually |
+| `stop-slop` | hardikpandya/stop-slop | style | Remove AI writing patterns from prose |
+| `subagent-driven-development` | obra/superpowers | implementation | Execute plans via delegated subagents |
+| `tdd` | mattpocock/skills | implementation | Test-driven development (RED-GREEN-REFACTOR) |
+| `tech-debt` | anthropics/knowledge-work-plugins | quality | Identify, categorize, prioritize technical debt |
+| `to-spec` | mattpocock/skills | design | Turn a conversation into a spec |
+| `to-tickets` | mattpocock/skills | design | Break a plan/spec into tickets |
+| `triage` | mattpocock/skills | quality | Move issues through a state machine of roles |
+| `using-git-worktrees` | obra/superpowers | implementation | Isolated feature work via git worktrees |
+| `verification-before-completion` | obra/superpowers | delivery | Verify before claiming work is done |
+| `wait-what` | mattpocock/skills | discovery | Re-pitch when a message didn't land |
+| `writing-for-agents` | mattpocock/skills | design | Write documents for agents to consume |
 
 ## Registry format
 
@@ -81,7 +117,7 @@ Two GitHub Actions workflows under `.github/workflows/`:
 ```
 .
 ├── README.md
-├── registry.json          # 29 entries (the source of truth)
+├── registry.json          # 30 entries (the source of truth)
 ├── install.sh             # wipe (gitignore-respecting) + install
 ├── validate-registry.sh   # integrity check (count, roles, duplicates)
 ├── .gitignore             # excludes /[REMOVED-INTERNAL-SKILL]/, /[REMOVED-INTERNAL-SKILL]/, etc. + stray install artifacts
