@@ -1,0 +1,5 @@
+{
+  "generated_at": "2026-08-22",
+  "note": "Baseline establishing reviewed-upstreams.json. No upstream versions have been human-reviewed yet; populate `sources` with blob SHAs from a trusted run of scripts/verify-upstreams.py and commit it as the reviewed state.",
+  "sources": {}
+}
