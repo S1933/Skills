@@ -1,0 +1,27 @@
+name: Check upstream drift
+
+# Weekly (and on-demand) detection of upstream SKILL.md changes for the
+# skills pinned in the registry. Does NOT auto-accept anything: it surfaces
+# drift for a human to review and, if accepted, refresh reviewed-upstreams.json
+# and commit it. Reachability (removed/moved skills) is the job of the
+# verify-upstreams workflow, not this one.
+
+on:
+  schedule:
+    # Tuesdays at 07:00 UTC (keeps Monday's verify-upstreams result freshest)
+    - cron: "0 7 * * 2"
+  workflow_dispatch:
+
+jobs:
+  drift:
+    name: Flag upstream skill changes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for upstream drift
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 scripts/check-upstream-drift.py registry.json

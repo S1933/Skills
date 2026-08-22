@@ -23,7 +23,7 @@ Without `-g` the CLI detects a project (this repo has a `.git`) and nests everyt
 | Source | Count | Role |
 |---|---:|---|
 | [`mattpocock/skills`](https://github.com/mattpocock/skills) | 16 | Engineering (grilling, TDD, diagnosing, code review, codebase-design) |
-| [`obra/superpowers`](https://github.com/obra/superpowers) | 7 | Execution (worktrees, subagents, dispatch, verification, finishing) |
+| [`obra/superpowers`](https://github.com/obra/superpowers) | 7 | Execution (worktrees, subagents, review orchestration, verification, finishing) |
 | [`multica-ai/andrej-karpathy-skills`](https://github.com/multica-ai/andrej-karpathy-skills) | 1 | Coding discipline (anti-overengineering) |
 | [`anthropics/knowledge-work-plugins`](https://github.com/anthropics/knowledge-work-plugins) | 1 | Tech debt audit |
 | [`juliusbrussee/caveman`](https://github.com/juliusbrussee/caveman) | 1 | Output style |
@@ -41,12 +41,12 @@ Each `registry.json` entry has a `role` ∈ {`discovery`, `design`, `implementat
 
 | Role | Count | What it covers |
 |---|---:|---|
-| `discovery` | 3 | `grilling`, `grill-with-docs`, `wait-what` — sharpen the question before designing |
+| `discovery` | 2 | `grilling`, `grill-with-docs` — sharpen the question before designing |
 | `design` | 7 | `codebase-design`, `domain-modeling`, `prototype`, `to-spec`, `to-tickets`, `improve-codebase-architecture`, `writing-for-agents` |
 | `implementation` | 4 | `tdd`, `executing-plans`, `subagent-driven-development`, `using-git-worktrees` |
 | `quality` | 8 | `code-review`, `diagnosing-bugs`, `karpathy-guidelines`, `receiving-code-review`, `requesting-code-review`, `security-review`, `tech-debt`, `triage` |
 | `delivery` | 3 | `finishing-a-development-branch`, `handoff`, `verification-before-completion` |
-| `style` | 4 | `caveman`, `i-have-adhd`, `show-me`, `stop-slop` — output shape |
+| `style` | 5 | `caveman`, `i-have-adhd`, `show-me`, `stop-slop`, `wait-what` — output shape |
 | `setup` | 1 | `setup-matt-pocock-skills` — onboarding |
 
 ## Full skill list
@@ -81,8 +81,39 @@ Each `registry.json` entry has a `role` ∈ {`discovery`, `design`, `implementat
 | `triage` | mattpocock/skills | quality | Move issues through a state machine of roles |
 | `using-git-worktrees` | obra/superpowers | implementation | Isolated feature work via git worktrees |
 | `verification-before-completion` | obra/superpowers | delivery | Verify before claiming work is done |
-| `wait-what` | mattpocock/skills | discovery | Re-pitch when a message didn't land |
+| `wait-what` | mattpocock/skills | style | Re-pitch when a message didn't land |
 | `writing-for-agents` | mattpocock/skills | design | Write documents for agents to consume |
+
+## Skill precedence
+
+When several skills are active, resolve conflicts in this order (most
+specific wins):
+
+1. Explicit task-specific workflow
+2. Orchestration skill
+3. Domain / process skill
+4. General behavioral guideline
+5. Style skill
+
+When an **orchestration skill** is explicitly active, its execution protocol
+wins over generic behavioral guidelines. For example, during
+`subagent-driven-development`, ambiguity is resolved by the SDD ruling
+protocol — not by stopping to ask (`karpathy-guidelines`).
+
+## TDD / plan contract
+
+`tdd` requires test seams to be established before writing tests. Plans that
+are expected to run autonomously should decide the test seams *before*
+entering `subagent-driven-development`, so an autonomous run is not
+interrupted mid-way.
+
+```text
+Discovery → Design → Spec → Test seams decided → Implementation plan
+   → Subagent-driven development → TDD cycles
+```
+
+Plans intended for autonomous execution should settle test seams before
+entering subagent-driven-development.
 
 ## Registry format
 
@@ -101,17 +132,31 @@ The lockfile lives outside this repo. Global installs record their state in `~/.
 
 1. Confirm upstream on [skills.sh](https://skills.sh/) — note the exact `(owner, repo)` and skill name.
 2. Edit `registry.json`:
-   - Add `{name, owner, repo, role}` to `skills[]` (alphabetical position is fine).
+   - Add `{name, owner, repo, role}` to `skills[]` in **alphabetical order by name** (the validator enforces it).
    - Bump `count`, `version`, and `generated_at`.
-3. `./install.sh --dry-run` then `./validate-registry.sh`.
-4. Commit and push — CI runs both checks automatically.
+3. `./validate-registry.sh` then `./install.sh --dry-run`.
+4. Commit and push — CI runs the unit tests, integrity check, schema validation, and upstream reachability checks automatically.
 
 ## Continuous integration
 
-Two GitHub Actions workflows under `.github/workflows/`:
+Three GitHub Actions workflows under `.github/workflows/`:
 
-- **`validate-registry.yml`** — runs on every push/PR touching `registry.json`, `install.sh`, `validate-registry.sh`, or itself. Steps: registry integrity check, install.sh dry-run smoke test, and a Python assertion that every non-TBD entry was actually planned by the dry-run output.
-- **`verify-upstreams.yml`** — scheduled weekly (Mondays 06:00 UTC) + manual dispatch. Checks every `(owner, repo)` still publishes the referenced `SKILL.md` via the GitHub contents API (with raw.githubusercontent fallback). Catches silent upstream removals before they break `./install.sh`.
+- **`validate-registry.yml`** — runs on push/PR touching `registry.json`, the
+  schema, `install.sh`, `validate-registry.sh`, `.gitignore`, `scripts/**`,
+  `tests/**`, or itself. Steps: unit tests, registry integrity check
+  (validates against `registry.schema.json`), install.sh dry-run smoke test,
+  and an assertion that every registry entry was actually planned by the
+  dry-run output.
+- **`verify-upstreams.yml`** — runs on push/PR touching `registry.json` or the
+  upstream script, plus weekly (Mondays 06:00 UTC) and manual dispatch.
+  Resolves every skills via the recursive GitHub git tree and reads the
+  frontmatter `name:` (no `directory-name` assumption), so an upstream layout
+  change does **not** break detection. A missing/unreachable skill is a hard
+  CI failure.
+- **`check-upstream-drift.yml`** — weekly (Tuesdays 07:00 UTC) + manual
+  dispatch. Reports when a selected SKILL.md's blob SHA changed since the last
+  human review (`reviewed-upstreams.json`). It only flags drift — accepting an
+  upstream change is a deliberate, manual step.
 
 ## Layout
 
@@ -119,13 +164,20 @@ Two GitHub Actions workflows under `.github/workflows/`:
 .
 ├── README.md
 ├── registry.json          # 30 entries (the source of truth)
-├── install.sh             # wipe (gitignore-respecting) + install
-├── validate-registry.sh   # integrity check (count, roles, duplicates)
+├── registry.schema.json   # structural contract (JSON Schema)
+├── reviewed-upstreams.json# last human-reviewed upstream state
+├── install.sh             # hardened: preflight, backup, rollback, validate
+├── validate-registry.sh   # business invariants (count, roles, dupes, sort, TBD)
 ├── .gitignore             # excludes /[REMOVED-INTERNAL-SKILL]/, /[REMOVED-INTERNAL-SKILL]/, etc. + stray install artifacts
+├── scripts/
+│   ├── verify-upstreams.py      # reachability (recursive git tree + frontmatter)
+│   └── check-upstream-drift.py  # drift (blob SHA vs reviewed-upstreams.json)
+├── tests/                 # stdlib unittest suite
 ├── <skill-name>/          # one directory per installed skill, at the root
 └── .github/workflows/
     ├── validate-registry.yml
-    └── verify-upstreams.yml
+    ├── verify-upstreams.yml
+    └── check-upstream-drift.yml
 ```
 
 ## `.gitignore` rationale

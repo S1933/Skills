@@ -32,8 +32,22 @@ warnings = []
 count = reg.get("count", 0)
 skills = reg.get("skills", [])
 
+# 0) Global invariants
+for key in ("name", "description", "version"):
+    val = reg.get(key, "")
+    if not val or not str(val).strip():
+        errors.append(f"missing non-empty top-level '{key}'")
+if not isinstance(count, int) or isinstance(count, bool):
+    errors.append(f"'count' must be an integer, got {type(count).__name__}")
+if not isinstance(skills, list):
+    errors.append(f"'skills' must be an array, got {type(skills).__name__}")
+import re as _re
+ga = reg.get("generated_at", "")
+if not _re.fullmatch(r"\d{4}-\d{2}-\d{2}", ga):
+    errors.append(f"generated_at must be YYYY-MM-DD, got {ga!r}")
+
 # 1) count == len(skills)
-if count != len(skills):
+if isinstance(count, int) and count != len(skills):
     errors.append(f"count ({count}) != skills.length ({len(skills)})")
 
 # 2) Each entry has required fields and a valid role
@@ -54,8 +68,14 @@ for i, s in enumerate(skills):
     if not repo:
         errors.append(f"skills[{i}] ({name}): missing 'repo'")
 
-    if owner == "TBD" or repo == "TBD":
-        warnings.append(f"skills[{i}] ({name}): TBD upstream — install skipped by default")
+    # TBD is not a valid upstream — a real owner/repo is mandatory.
+    # Every registry entry must map to an installable GitHub source.
+    if name.upper() == "TBD":
+        errors.append(f"skills[{i}] ({name}): name must not be TBD")
+    if owner.upper() == "TBD":
+        errors.append(f"skills[{i}] ({name}): owner must not be TBD")
+    if repo.upper() == "TBD":
+        errors.append(f"skills[{i}] ({name}): repo must not be TBD")
 
     # Role is part of the contract — fail CI if missing or invalid
     if not role:
@@ -75,7 +95,12 @@ for i, s in enumerate(skills):
         errors.append(f"skills[{i}] ({name}): duplicate source ({owner}/{repo}/{name})")
     seen_sources.add(source_key)
 
-# 3) Role distribution sanity check — roles never used are flagged as warnings
+# 3) Skills must be sorted alphabetically by name (case-insensitive)
+names = [s.get("name", "").strip() for s in skills]
+if names != sorted(names, key=str.casefold):
+    errors.append("skills must be sorted alphabetically by name")
+
+# 4) Role distribution sanity check — roles never used are flagged as warnings
 from collections import Counter
 roles = Counter(s.get("role") for s in skills if s.get("role"))
 unused_roles = VALID_ROLES - set(roles.keys())
