@@ -23,7 +23,7 @@ Without `-g` the CLI detects a project (this repo has a `.git`) and nests everyt
 | Source | Count | Role |
 |---|---:|---|
 | [`mattpocock/skills`](https://github.com/mattpocock/skills) | 16 | Engineering (grilling, TDD, diagnosing, code review, codebase-design) |
-| [`obra/superpowers`](https://github.com/obra/superpowers) | 8 | Execution (worktrees, subagents, dispatch, verification, finishing) |
+| [`obra/superpowers`](https://github.com/obra/superpowers) | 7 | Execution (worktrees, subagents, dispatch, verification, finishing) |
 | [`multica-ai/andrej-karpathy-skills`](https://github.com/multica-ai/andrej-karpathy-skills) | 1 | Coding discipline (anti-overengineering) |
 | [`anthropics/knowledge-work-plugins`](https://github.com/anthropics/knowledge-work-plugins) | 1 | Tech debt audit |
 | [`juliusbrussee/caveman`](https://github.com/juliusbrussee/caveman) | 1 | Output style |
@@ -31,7 +31,7 @@ Without `-g` the CLI detects a project (this repo has a `.git`) and nests everyt
 | [`humanlayer/skills`](https://github.com/humanlayer/skills) | 1 | Visual explanation (`show-me`) |
 | [`hardikpandya/stop-slop`](https://github.com/hardikpandya/stop-slop) | 1 | Prose de-slop (remove AI tells) |
 | [`getsentry/skills`](https://github.com/getsentry/skills) | 1 | Security review (OWASP-based) |
-| **Total** | **31** | |
+| **Total** | **30** | |
 
 Matt Pocock (engineering discipline) × obra/superpowers (execution/orchestration). Both collections in full would create rule collisions and duplicates, so we picked the best of each. `obra/superpowers/brainstorming` is excluded — its HARD-GATE clashes with the hybrid.
 
@@ -43,7 +43,7 @@ Each `registry.json` entry has a `role` ∈ {`discovery`, `design`, `implementat
 |---|---:|---|
 | `discovery` | 3 | `grilling`, `grill-with-docs`, `wait-what` — sharpen the question before designing |
 | `design` | 7 | `codebase-design`, `domain-modeling`, `prototype`, `to-spec`, `to-tickets`, `improve-codebase-architecture`, `writing-for-agents` |
-| `implementation` | 5 | `tdd`, `dispatching-parallel-agents`, `executing-plans`, `subagent-driven-development`, `using-git-worktrees` |
+| `implementation` | 4 | `tdd`, `executing-plans`, `subagent-driven-development`, `using-git-worktrees` |
 | `quality` | 8 | `code-review`, `diagnosing-bugs`, `karpathy-guidelines`, `receiving-code-review`, `requesting-code-review`, `security-review`, `tech-debt`, `triage` |
 | `delivery` | 3 | `finishing-a-development-branch`, `handoff`, `verification-before-completion` |
 | `style` | 4 | `caveman`, `i-have-adhd`, `show-me`, `stop-slop` — output shape |
@@ -57,7 +57,6 @@ Each `registry.json` entry has a `role` ∈ {`discovery`, `design`, `implementat
 | `code-review` | mattpocock/skills | quality | Review changes since a fixed point (commit/branch) |
 | `codebase-design` | mattpocock/skills | design | Shared vocabulary for designing deep modules |
 | `diagnosing-bugs` | mattpocock/skills | quality | Rigorous diagnosis loop for hard bugs/regressions |
-| `dispatching-parallel-agents` | obra/superpowers | implementation | Run independent tasks across parallel agents |
 | `domain-modeling` | mattpocock/skills | design | Build and sharpen a project's domain model |
 | `executing-plans` | obra/superpowers | implementation | Execute a written implementation plan |
 | `finishing-a-development-branch` | obra/superpowers | delivery | Wrap up a completed branch (verify, merge) |
