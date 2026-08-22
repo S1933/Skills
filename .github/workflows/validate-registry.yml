@@ -5,33 +5,65 @@ on:
     branches: [main]
     paths:
       - registry.json
+      - registry.schema.json
       - install.sh
       - validate-registry.sh
+      - .gitignore
+      - scripts/**
+      - tests/**
       - .github/workflows/validate-registry.yml
   pull_request:
     branches: [main]
     paths:
       - registry.json
+      - registry.schema.json
       - install.sh
       - validate-registry.sh
+      - .gitignore
+      - scripts/**
+      - tests/**
       - .github/workflows/validate-registry.yml
 
 jobs:
   validate:
     name: registry.json integrity
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
-      - name: Validate registry.json
+      - name: Unit tests
+        run: |
+          python3 -m unittest discover -s tests
+
+      - name: Validate registry.json (business invariants)
         run: |
           chmod +x validate-registry.sh
           ./validate-registry.sh
+
+      - name: Validate registry.json against JSON schema
+        run: |
+          python3 - <<'PYEOF'
+          import json, sys
+          try:
+              import jsonschema
+          except ImportError:
+              print("jsonschema not installed; skipping structural check")
+              sys.exit(0)
+          with open('registry.schema.json') as f:
+              schema = json.load(f)
+          with open('registry.json') as f:
+              reg = json.load(f)
+          jsonschema.validate(instance=reg, schema=schema)
+          print("OK: registry.json matches registry.schema.json")
+          PYEOF
 
       - name: Smoke-test install.sh (dry-run)
         run: |
           chmod +x install.sh
           ./install.sh --dry-run | tee /tmp/install.log > /dev/null
+
       - name: Verify all registry entries are planned
         run: |
           python3 - <<'PYEOF'
@@ -41,11 +73,10 @@ jobs:
           with open('/tmp/install.log') as f:
               log = f.read()
           missing = [s['name'] for s in reg['skills']
-                     if s['owner'] != 'TBD'
-                     and s['name'] not in log]
+                     if s['name'] not in log]
           if missing:
               print(f'ERROR: install.sh dry-run did not plan: {missing}')
               sys.exit(1)
-          planned = len(reg['skills']) - sum(1 for s in reg['skills'] if s['owner'] == 'TBD')
-          print(f'OK: install.sh planned all {planned} non-TBD skills')
+          planned = len(reg['skills'])
+          print(f'OK: install.sh planned all {planned} skills')
           PYEOF
