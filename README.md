@@ -30,7 +30,8 @@ Without `-g` the CLI detects a project (this repo has a `.git`) and nests everyt
 | [`ayghri/i-have-adhd`](https://github.com/ayghri/i-have-adhd) | 1 | Output style |
 | [`humanlayer/skills`](https://github.com/humanlayer/skills) | 1 | Visual explanation (`show-me`) |
 | [`hardikpandya/stop-slop`](https://github.com/hardikpandya/stop-slop) | 1 | Prose de-slop (remove AI tells) |
-| **Total** | **30** | |
+| [`getsentry/skills`](https://github.com/getsentry/skills) | 1 | Security review (OWASP-based) |
+| **Total** | **31** | |
 
 Matt Pocock (engineering discipline) × obra/superpowers (execution/orchestration). Both collections in full would create rule collisions and duplicates, so we picked the best of each. `obra/superpowers/brainstorming` is excluded — its HARD-GATE clashes with the hybrid.
 
@@ -43,7 +44,7 @@ Each `registry.json` entry has a `role` ∈ {`discovery`, `design`, `implementat
 | `discovery` | 3 | `grilling`, `grill-with-docs`, `wait-what` — sharpen the question before designing |
 | `design` | 7 | `codebase-design`, `domain-modeling`, `prototype`, `to-spec`, `to-tickets`, `improve-codebase-architecture`, `writing-for-agents` |
 | `implementation` | 5 | `tdd`, `dispatching-parallel-agents`, `executing-plans`, `subagent-driven-development`, `using-git-worktrees` |
-| `quality` | 7 | `code-review`, `diagnosing-bugs`, `karpathy-guidelines`, `receiving-code-review`, `requesting-code-review`, `tech-debt`, `triage` |
+| `quality` | 8 | `code-review`, `diagnosing-bugs`, `karpathy-guidelines`, `receiving-code-review`, `requesting-code-review`, `security-review`, `tech-debt`, `triage` |
 | `delivery` | 3 | `finishing-a-development-branch`, `handoff`, `verification-before-completion` |
 | `style` | 4 | `caveman`, `i-have-adhd`, `show-me`, `stop-slop` — output shape |
 | `setup` | 1 | `setup-matt-pocock-skills` — onboarding |
@@ -69,6 +70,7 @@ Each `registry.json` entry has a `role` ∈ {`discovery`, `design`, `implementat
 | `prototype` | mattpocock/skills | design | Throwaway prototype to answer a design question |
 | `receiving-code-review` | obra/superpowers | quality | Handle inbound review feedback correctly |
 | `requesting-code-review` | obra/superpowers | quality | Pre-commit review (security, quality gates) |
+| `security-review` | getsentry/skills | quality | Security code review for vulnerabilities (OWASP-based) |
 | `setup-matt-pocock-skills` | mattpocock/skills | setup | Configure this repo for the engineering skills |
 | `show-me` | humanlayer/skills | style | Explain the current topic visually |
 | `stop-slop` | hardikpandya/stop-slop | style | Remove AI writing patterns from prose |
