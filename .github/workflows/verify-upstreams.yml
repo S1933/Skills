@@ -1,10 +1,24 @@
 name: Verify upstreams
 
-# Weekly scheduled check that every (owner, repo) still publishes the
-# referenced skill. Catches silent upstream removals before they break
-# ./install.sh in CI.
+# Every registry skill must resolve to a real upstream SKILL.md, matched by
+# frontmatter `name` (not directory name), discovered via the recursive git
+# tree — no upstream layout assumed. Runs on registry changes AND weekly, to
+# catch silent upstream removals. Drift (content changes) is handled by the
+# separate check-upstream-drift workflow.
 
 on:
+  pull_request:
+    branches: [main]
+    paths:
+      - registry.json
+      - scripts/verify-upstreams.py
+      - .github/workflows/verify-upstreams.yml
+  push:
+    branches: [main]
+    paths:
+      - registry.json
+      - scripts/verify-upstreams.py
+      - .github/workflows/verify-upstreams.yml
   schedule:
     # Mondays at 06:00 UTC
     - cron: "0 6 * * 1"
@@ -14,110 +28,12 @@ jobs:
   verify:
     name: All skills reachable upstream
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
       - name: Verify every skill still exists upstream
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          python3 - <<'PYEOF'
-          import json, os, sys, base64, urllib.request, urllib.error
-
-          with open('registry.json') as f:
-              reg = json.load(f)
-
-          GH_TOKEN = os.environ.get('GH_TOKEN', '')
-          def api_get(url):
-              headers = {
-                  "User-Agent": "s1933-skills-registry/1.0",
-                  "Accept": "application/vnd.github+json",
-              }
-              if GH_TOKEN:
-                  headers["Authorization"] = f"Bearer {GH_TOKEN}"
-              req = urllib.request.Request(url, headers=headers)
-              try:
-                  with urllib.request.urlopen(req, timeout=15) as r:
-                      return r.status, r.read()
-              except urllib.error.HTTPError as e:
-                  return e.code, e.read()
-              except Exception as e:
-                  return 0, str(e).encode()
-
-          # Plausible directories inside an upstream repo for a SKILL.md, given a
-          # skill name. Both the Contents API and raw.githubusercontent will be
-          # probed against this list, in order, under each candidate branch.
-          def skill_path_candidates(name):
-              return (
-                  f"skills/{name}/SKILL.md",
-                  f"skills/engineering/{name}/SKILL.md",
-                  f"skills/productivity/{name}/SKILL.md",
-                  f"skills/in-progress/{name}/SKILL.md",
-                  f"skills/misc/{name}/SKILL.md",
-                  f"plugins/{name}/skills/{name}/SKILL.md",
-                  f"plugins/{name}/skills/{name}-{name}/SKILL.md",
-                  f"{name}/SKILL.md",
-              )
-
-          def default_branch(owner, repo):
-              """Return the repo's default branch (e.g. 'main' or 'master').
-              Falls back to 'main' on any error — raw.githubusercontent serves
-              both, and a HEAD fallback later catches the rest."""
-              status, body = api_get(f"https://api.github.com/repos/{owner}/{repo}")
-              if status == 200:
-                  try:
-                      return json.loads(body).get("default_branch") or "main"
-                  except Exception:
-                      pass
-              return "main"
-
-          def skill_exists(owner, repo, name):
-              paths = skill_path_candidates(name)
-              # Strategy 1: GitHub contents API (canonical, follows default branch).
-              # Including nested patterns like plugins/{name}/skills/{name}/.
-              # Token-auth bumps rate limit; raw fallback below covers unauth.
-              for path in paths:
-                  status, _ = api_get(
-                      f"https://api.github.com/repos/{owner}/{repo}/contents/{path}"
-                  )
-                  if status == 200:
-                      return True
-                  if status == 403:
-                      # Rate-limited — bail out, fall through to raw
-                      break
-              # Strategy 2: raw.githubusercontent against the default branch.
-              # Tested with both 'main' and 'master' for repos that flipped.
-              for branch in (default_branch(owner, repo), "main", "master"):
-                  for path in paths:
-                      url = f"https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{path}"
-                      status, _ = api_get(url)
-                      if status == 200:
-                          return True
-              # Strategy 3: raw against the symbolic HEAD (resolves whatever the
-              # repo currently advertises as default). Reliable when the CDN
-              # briefly serves stale results on /main/.
-              for path in paths:
-                  url = f"https://raw.githubusercontent.com/{owner}/{repo}/HEAD/{path}"
-                  status, _ = api_get(url)
-                  if status == 200:
-                      return True
-              return False
-
-          missing = []
-          checked = 0
-          for s in reg['skills']:
-              owner, repo, name = s['owner'], s['repo'], s['name']
-              if owner == 'TBD' or repo == 'TBD':
-                  continue
-              checked += 1
-              if not skill_exists(owner, repo, name):
-                  missing.append((name, f"{owner}/{repo}"))
-
-          print(f"Checked {checked} skills across upstream registries.")
-          if missing:
-              print(f"\n{len(missing)} skill(s) no longer reachable upstream:")
-              for name, src in missing:
-                  print(f"  ✗ {name:<32} ({src})")
-              sys.exit(1)
-          print("✓ All upstreams reachable.")
-          PYEOF
+        run: python3 scripts/verify-upstreams.py registry.json
