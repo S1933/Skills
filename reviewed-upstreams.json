@@ -1,5 +1,162 @@
 {
-  "generated_at": "2026-08-22",
-  "note": "Baseline establishing reviewed-upstreams.json. No upstream versions have been human-reviewed yet; populate `sources` with blob SHAs from a trusted run of scripts/verify-upstreams.py and commit it as the reviewed state.",
-  "sources": {}
+  "generated_at": "2026-08-25",
+  "note": "Baseline of reviewed upstream blob SHAs, written by scripts/verify-upstreams.py --baseline. Refresh deliberately: review upstream changes, re-run with --baseline, then commit.",
+  "sources": {
+    "anthropics/knowledge-work-plugins": {
+      "skills": {
+        "tech-debt": {
+          "path": "engineering/skills/tech-debt/SKILL.md",
+          "blob_sha": "d8fcb53a676c8781b3b1bb7fab9235b7c9cf204e"
+        }
+      }
+    },
+    "ayghri/i-have-adhd": {
+      "skills": {
+        "i-have-adhd": {
+          "path": ".cursor/skills/i-have-adhd/SKILL.md",
+          "blob_sha": "8ac77479058329f36f41954dd1b1fbc21fb808aa"
+        }
+      }
+    },
+    "getsentry/skills": {
+      "skills": {
+        "security-review": {
+          "path": "skills/security-review/SKILL.md",
+          "blob_sha": "6a85366167d345dfb4c4e83d506b6b0502f1d651"
+        }
+      }
+    },
+    "hardikpandya/stop-slop": {
+      "skills": {
+        "stop-slop": {
+          "path": "SKILL.md",
+          "blob_sha": "83f2032fde406e97492ec48ee05ebe46f6403109"
+        }
+      }
+    },
+    "humanlayer/skills": {
+      "skills": {
+        "show-me": {
+          "path": "plugins/show-me/skills/show-me/SKILL.md",
+          "blob_sha": "d57a0a0afc2800a4cc7a7765e65a9c6c18e67b4f"
+        }
+      }
+    },
+    "juliusbrussee/caveman": {
+      "skills": {
+        "caveman": {
+          "path": "plugins/caveman/skills/caveman/SKILL.md",
+          "blob_sha": "32a22a94ee1707d39a1585e0d93e2281b7a50cb8"
+        }
+      }
+    },
+    "mattpocock/skills": {
+      "skills": {
+        "code-review": {
+          "path": "skills/engineering/code-review/SKILL.md",
+          "blob_sha": "e28d7acbf7b3bb4d7817b7eb5d9c105af03f6ec4"
+        },
+        "codebase-design": {
+          "path": "skills/engineering/codebase-design/SKILL.md",
+          "blob_sha": "3f63c8146dd2604b419c929e9876b90c30d410e9"
+        },
+        "diagnosing-bugs": {
+          "path": "skills/engineering/diagnosing-bugs/SKILL.md",
+          "blob_sha": "061c25a524acaa93d4534e9e08a793c0a5fe45fd"
+        },
+        "domain-modeling": {
+          "path": "skills/engineering/domain-modeling/SKILL.md",
+          "blob_sha": "9b97707e19ef1f590aada356f2b3f6bb881f91be"
+        },
+        "grill-with-docs": {
+          "path": "skills/engineering/grill-with-docs/SKILL.md",
+          "blob_sha": "62b9efb6f991d1b229adee7506962f13ced0c499"
+        },
+        "grilling": {
+          "path": "skills/productivity/grilling/SKILL.md",
+          "blob_sha": "8ca78c6d8f901aab0c5a1f896034b70e666ff2a3"
+        },
+        "handoff": {
+          "path": "skills/productivity/handoff/SKILL.md",
+          "blob_sha": "2eb98a51b97bb5bac461a26ad14828eeac827909"
+        },
+        "improve-codebase-architecture": {
+          "path": "skills/engineering/improve-codebase-architecture/SKILL.md",
+          "blob_sha": "a578dd0a34ad0a8886abe7e7642b100106ba86d6"
+        },
+        "prototype": {
+          "path": "skills/engineering/prototype/SKILL.md",
+          "blob_sha": "a0044501fe0d385b4d8575b610188ede9b236ccf"
+        },
+        "setup-matt-pocock-skills": {
+          "path": "skills/engineering/setup-matt-pocock-skills/SKILL.md",
+          "blob_sha": "7f6f576e2e54e0d287cbb9731ebe0343f54e50cf"
+        },
+        "tdd": {
+          "path": "skills/engineering/tdd/SKILL.md",
+          "blob_sha": "8fc086710806190ee7c4baa32089cb877a75736a"
+        },
+        "to-spec": {
+          "path": "skills/engineering/to-spec/SKILL.md",
+          "blob_sha": "3f52599ae2a4347aee5a07432c2707518e691a7f"
+        },
+        "to-tickets": {
+          "path": "skills/engineering/to-tickets/SKILL.md",
+          "blob_sha": "e868c831fcfb1e124e010bcdf84a429ec879160f"
+        },
+        "triage": {
+          "path": "skills/engineering/triage/SKILL.md",
+          "blob_sha": "37ddea1e3dcf8fb5be5b92e4e45f2c34b8e61d3e"
+        },
+        "wait-what": {
+          "path": "skills/productivity/wait-what/SKILL.md",
+          "blob_sha": "f8854f1b4527bca90378baf5430557172136a1bf"
+        },
+        "writing-for-agents": {
+          "path": "skills/productivity/writing-for-agents/SKILL.md",
+          "blob_sha": "a37608daf6e835e767deecfb498facecaaba82ba"
+        }
+      }
+    },
+    "multica-ai/andrej-karpathy-skills": {
+      "skills": {
+        "karpathy-guidelines": {
+          "path": "skills/karpathy-guidelines/SKILL.md",
+          "blob_sha": "6a62d0441753157ca6ca50479e490c2948033adb"
+        }
+      }
+    },
+    "obra/superpowers": {
+      "skills": {
+        "executing-plans": {
+          "path": "skills/executing-plans/SKILL.md",
+          "blob_sha": "b51d97d2cc4c2ecc5eabecf27e499aa8c933efac"
+        },
+        "finishing-a-development-branch": {
+          "path": "skills/finishing-a-development-branch/SKILL.md",
+          "blob_sha": "fa8aecaf8813f1b19d19996f7957d1b0121f2d9c"
+        },
+        "receiving-code-review": {
+          "path": "skills/receiving-code-review/SKILL.md",
+          "blob_sha": "950da7b74bf6dbed6b8726d12ddadd65a9f5fda7"
+        },
+        "requesting-code-review": {
+          "path": "skills/requesting-code-review/SKILL.md",
+          "blob_sha": "fa4f2f9965591d6d8a7ef4ad47e6ba4d5ac344d0"
+        },
+        "subagent-driven-development": {
+          "path": "skills/subagent-driven-development/SKILL.md",
+          "blob_sha": "aac35b91c07af15eca580a205eb0c894b86e87c8"
+        },
+        "using-git-worktrees": {
+          "path": "skills/using-git-worktrees/SKILL.md",
+          "blob_sha": "1381dacb3516b94382dd6ec736ede21ee8ede2b3"
+        },
+        "verification-before-completion": {
+          "path": "skills/verification-before-completion/SKILL.md",
+          "blob_sha": "7d45333cc4a49c57a80df6c1fe2fa777a207afbc"
+        }
+      }
+    }
+  }
 }
