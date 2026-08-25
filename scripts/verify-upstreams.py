@@ -10,8 +10,10 @@ check-upstream-drift.py.
 
 Usage:
     python3 scripts/verify-upstreams.py registry.json
+    python3 scripts/verify-upstreams.py registry.json --baseline reviewed-upstreams.json
 """
 
+import datetime
 import json
 import os
 import sys
@@ -114,8 +116,12 @@ def build_upstream_index(owner, repo):
     """Map every upstream skill name -> {path, blob_sha} for one repo.
 
     Returns (index, duplicates, error).
-    index:      {name: {path, blob_sha}}
-    duplicates: {name: [paths]} for ambiguous upstream skill names
+    index:      {name: {path, blob_sha}} — first occurrence wins. Upstream
+                repos often mirror a skill into several directories (e.g.
+                plugins/<x>/skills/ and skills/); copies with identical
+                content are treated as one skill.
+    duplicates: {name: [paths]} only for genuinely ambiguous names — same
+                frontmatter name, DIFFERENT blob content
     error:      None or a string describing a hard failure
     """
     branch = default_branch(owner, repo)
@@ -123,8 +129,7 @@ def build_upstream_index(owner, repo):
     if paths is None:
         return {}, {}, f"cannot fetch recursive tree for {owner}/{repo}"
 
-    index = {}
-    duplicates = {}
+    entries_by_name = {}
     for path in skill_md_paths(paths):
         sha = sha_by_path.get(path)
         if not sha:
@@ -138,20 +143,35 @@ def build_upstream_index(owner, repo):
         name = frontmatter_name(data)
         if not name:
             continue
-        if name in index:
-            duplicates.setdefault(name, []).append(index[name]["path"])
-            duplicates.setdefault(name, []).append(path)
-        else:
-            index[name] = {"path": path, "blob_sha": sha}
+        entries_by_name.setdefault(name, []).append((path, sha))
 
+    index = {
+        name: {"path": entries[0][0], "blob_sha": entries[0][1]}
+        for name, entries in entries_by_name.items()
+    }
+    duplicates = {
+        name: [p for p, _ in entries]
+        for name, entries in entries_by_name.items()
+        if len({sha for _, sha in entries}) > 1
+    }
     return index, duplicates, None
 
 
 def main():
-    if len(sys.argv) < 2:
-        print("usage: verify-upstreams.py registry.json", file=sys.stderr)
+    args = sys.argv[1:]
+    baseline_path = None
+    if "--baseline" in args:
+        i = args.index("--baseline")
+        if i + 1 >= len(args):
+            print("--baseline requires a path", file=sys.stderr)
+            return 2
+        baseline_path = args[i + 1]
+        del args[i:i + 2]
+    if not args:
+        print("usage: verify-upstreams.py registry.json [--baseline PATH]",
+              file=sys.stderr)
         return 2
-    with open(sys.argv[1]) as f:
+    with open(args[0]) as f:
         reg = json.load(f)
     skills = reg["skills"]
 
@@ -163,7 +183,8 @@ def main():
 
     checked = 0
     missing = []
-    all_duplicates = {}
+    ambiguous = []  # registry skills whose upstream name matches multiple SKILL.md files
+    baseline_sources = {}
 
     for (owner, repo), names in sorted(sources.items()):
         print(f"Checking {owner}/{repo}")
@@ -173,14 +194,16 @@ def main():
             for name in names:
                 missing.append((name, f"{owner}/{repo}"))
             continue
-        if duplicates:
-            all_duplicates.update(duplicates)
         found = []
         for name in names:
             checked += 1
             if name in index:
                 found.append(name)
                 print(f"  ✓ {name}")
+                if name in duplicates:
+                    ambiguous.append((name, f"{owner}/{repo}", duplicates[name]))
+                baseline_sources.setdefault(f"{owner}/{repo}", {"skills": {}})[
+                    "skills"][name] = index[name]
             else:
                 print(f"  ✗ {name}")
                 missing.append((name, f"{owner}/{repo}"))
@@ -193,11 +216,12 @@ def main():
     print()
 
     status = 0
-    if all_duplicates:
+    if ambiguous:
         status = 1
-        print("✗ Duplicate upstream skill names:")
-        for name, paths in sorted(all_duplicates.items()):
-            print(f"  {name}")
+        print("✗ Ambiguous upstream skill names (registry skill matches"
+              " multiple upstream SKILL.md files):")
+        for name, src, paths in sorted(ambiguous):
+            print(f"  {name}  (upstream: {src})")
             for p in paths:
                 print(f"    {p}")
         print()
@@ -209,6 +233,19 @@ def main():
             print(f"  {name}")
             print(f"    upstream: {src}")
         print()
+
+    if baseline_path and status == 0:
+        baseline = {
+            "generated_at": datetime.date.today().isoformat(),
+            "note": "Baseline of reviewed upstream blob SHAs, written by"
+            " scripts/verify-upstreams.py --baseline. Refresh deliberately:"
+            " review upstream changes, re-run with --baseline, then commit.",
+            "sources": dict(sorted(baseline_sources.items())),
+        }
+        with open(baseline_path, "w") as f:
+            json.dump(baseline, f, indent=2)
+            f.write("\n")
+        print(f"✓ Baseline written to {baseline_path}")
 
     if status == 0:
         print(f"✓ All {checked} upstream skills found.")
