@@ -26,6 +26,9 @@ INSTALL_ROOT="$REPO_ROOT"
 # Pin the skills CLI so two runs of the same commit use the same version.
 SKILLS_CLI_VERSION="${SKILLS_CLI_VERSION:-1.5.23}"
 
+# Appended to across every upstream, so a failure keeps the earlier context.
+INSTALL_LOG="${INSTALL_LOG:-/tmp/install-skills.log}"
+
 DRY_RUN=false
 case "${1:-}" in
   --dry-run)  DRY_RUN=true ;;
@@ -158,7 +161,7 @@ restore_backup() {
 
 # ---- Phase 11+12: install, grouped per upstream, pinned CLI ----------
 install_all() {
-  local before_rc=0
+  : >"$INSTALL_LOG"
   while IFS=$'\t' read -r source names; do
     [[ -z "$source" ]] && continue
     local owner repo
@@ -173,10 +176,12 @@ install_all() {
     for n in $names; do
       add_args+=(--skill "$n")
     done
+    # </dev/null is load-bearing: npx would otherwise inherit this loop's stdin
+    # and drain the remaining upstreams from the process substitution.
     if ! npx --yes "skills@${SKILLS_CLI_VERSION}" add \
         "https://github.com/${owner}/${repo}" \
-        "${add_args[@]}" -g -y >/tmp/install-skills.log 2>&1; then
-      say "  ✗ install failed for ${owner}/${repo}"
+        "${add_args[@]}" -g -y </dev/null >>"$INSTALL_LOG" 2>&1; then
+      say "  ✗ install failed for ${owner}/${repo} (see $INSTALL_LOG)"
       return 1
     fi
     say "  ✓ ${owner}/${repo}"
