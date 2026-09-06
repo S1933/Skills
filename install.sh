@@ -5,7 +5,7 @@
 #   1. preflight (tools + git repo present)
 #   2. validate the registry (abort before touching the filesystem)
 #   3. backup current public skills into a temp dir
-#   4. install (one npx call per upstream, kept private skills preserved)
+#   4. install (one npx call per upstream; private/local paths are preserved)
 #   5. post-validate that every registry skill's <name>/SKILL.md exists
 #   6. on ANY failure: roll back to the previous installation, then exit 1
 #
@@ -224,11 +224,7 @@ if $DRY_RUN; then
     say "  + ${source}  ->  [${names// /, }]"
   done
   say ""
-  say "→ private skills preserved via .gitignore:"
-  ls -d "${INSTALL_ROOT}/[REMOVED-INTERNAL-SKILL]" "${INSTALL_ROOT}/[REMOVED-INTERNAL-SKILL]" "${INSTALL_ROOT}/[REMOVED-INTERNAL-MARKER]" \
-      "${INSTALL_ROOT}/[REMOVED-INTERNAL-SKILL]" "${INSTALL_ROOT}/[REMOVED-INTERNAL-SKILL]" \
-      "${INSTALL_ROOT}/[REMOVED-INTERNAL-SKILL]" "${INSTALL_ROOT}/[REMOVED-INTERNAL-SKILL]" 2>/dev/null \
-    | sed "s|$INSTALL_ROOT/|  ⊘ |"
+  say "→ Private/local skills under private/ or .local/ are preserved."
   exit 0
 fi
 

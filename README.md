@@ -127,7 +127,7 @@ d'entrer dans subagent-driven-development.
 - `role` — obligatoire, l'un des sept ci-dessus
 - `count` en tête doit être égal à `skills.length` (vérifié par `validate-registry.sh`)
 
-Le lockfile vit en dehors de ce dépôt. Les installations globales enregistrent leur état dans `~/.agents/.skill-lock.json`, partagé avec les skills installées par d'autres moyens (les skills privées listées plus bas) ; `./install.sh` ne le réécrit donc jamais intégralement — `npx skills add` met à jour ses propres entrées.
+Le lockfile vit en dehors de ce dépôt. Les installations globales enregistrent leur état dans `~/.agents/.skill-lock.json`, partagé avec les skills installées par d'autres moyens. `./install.sh` ne le réécrit pas intégralement : `npx skills add` met à jour ses propres entrées.
 
 ## Ajouter une skill
 
@@ -170,7 +170,7 @@ Trois workflows GitHub Actions dans `.github/workflows/` :
 ├── reviewed-upstreams.json# dernier état upstream revu par un humain
 ├── install.sh             # durci : préflight, sauvegarde, rollback, validation
 ├── validate-registry.sh   # invariants métier (count, rôles, doublons, tri, TBD)
-├── .gitignore             # exclut /[REMOVED-INTERNAL-SKILL]/, /[REMOVED-INTERNAL-SKILL]/, etc. + artefacts d'install parasites
+├── .gitignore             # exclut /private/ et /.local/, plus les artefacts d'installation parasites
 ├── scripts/
 │   ├── verify-upstreams.py      # accessibilité (arbre git récursif + frontmatter)
 │   └── check-upstream-drift.py  # dérive (SHA de blob vs reviewed-upstreams.json)
@@ -184,6 +184,6 @@ Trois workflows GitHub Actions dans `.github/workflows/` :
 
 ## Justification du `.gitignore`
 
-`/[REMOVED-INTERNAL-SKILL]/`, `/[REMOVED-INTERNAL-SKILL]/`, `/[REMOVED-INTERNAL-MARKER]/`, `/[REMOVED-INTERNAL-SKILL]/`, `/[REMOVED-INTERNAL-SKILL]/`, `/[REMOVED-INTERNAL-SKILL]/`, `/[REMOVED-INTERNAL-SKILL]/` sont des skills privées ou personnalisées qui ne font pas partie de la distribution publique — elles sont préservées lors de l'effacement.
+`/private/` et `/.local/` accueillent les skills privées ou locales. L'installateur les préserve lors de l'effacement.
 
-`/.agents/`, `/.claude/` et `/skills-lock.json` sont des artefacts de `npx skills add` à portée projet. Les installations étant globales (`-g`) et posées directement à la racine du dépôt, ces chemins ne devraient jamais réapparaître ; `./install.sh` les supprime à chaque exécution, en filet de sécurité.
+`/.agents/`, `/.claude/` et `/skills-lock.json` sont des artefacts de `npx skills add` à portée projet. Les installations globales (`-g`) les placent à la racine du dépôt. `./install.sh` les supprime à chaque exécution.
