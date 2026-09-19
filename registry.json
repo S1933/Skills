@@ -2,9 +2,9 @@
   "$schema": "./registry.schema.json",
   "name": "s1933-skills-registry",
   "description": "Flat registry of agent skills to install via 'npx skills add'. Hybrid of mattpocock/skills (engineering) and obra/superpowers (orchestration). Each entry has a role (discovery/design/implementation/setup/quality/delivery/style) documenting why the skill is in the registry. Excludes obra/superpowers/brainstorming (HARD-GATE incompatible with the Matt+Superpowers hybrid).",
-  "version": "1.0.5",
-  "generated_at": "2026-08-22",
-  "count": 30,
+  "version": "1.0.6",
+  "generated_at": "2026-09-18",
+  "count": 31,
   "skills": [
     {
       "name": "caveman",
@@ -100,6 +100,12 @@
       "name": "requesting-code-review",
       "owner": "obra",
       "repo": "superpowers",
+      "role": "quality"
+    },
+    {
+      "name": "security-audit",
+      "owner": "cloudflare",
+      "repo": "security-audit-skill",
       "role": "quality"
     },
     {
