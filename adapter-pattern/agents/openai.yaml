@@ -1,0 +1,4 @@
+interface:
+  display_name: "Adapter Pattern"
+  short_description: "Design narrow translation boundaries"
+  default_prompt: "Use $adapter-pattern to design or review this integration boundary."

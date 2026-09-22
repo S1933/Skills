@@ -1,0 +1,4 @@
+interface:
+  display_name: "Go CLI Conventions"
+  short_description: "Build robust Go and Cobra command-line tools"
+  default_prompt: "Use $go-cli-conventions to design or review this Go CLI."

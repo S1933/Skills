@@ -1,0 +1,4 @@
+interface:
+  display_name: "Embedded Fixtures"
+  short_description: "Package deterministic fixtures inside binaries"
+  default_prompt: "Use $embedded-fixtures to design or review these embedded test assets."

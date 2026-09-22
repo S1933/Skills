@@ -1,0 +1,4 @@
+interface:
+  display_name: "Schema Validation"
+  short_description: "Design precise schema validation boundaries"
+  default_prompt: "Use $schema-validation to design or review this validation layer."

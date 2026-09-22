@@ -1,0 +1,4 @@
+interface:
+  display_name: "Binary Distribution"
+  short_description: "Ship trustworthy cross-platform binaries"
+  default_prompt: "Use $binary-distribution to design or review this release pipeline."
